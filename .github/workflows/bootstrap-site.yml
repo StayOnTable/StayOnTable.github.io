@@ -37,3 +37,5 @@ jobs:
           git add -A
           git commit -m "Restore verified StayOnTable personal site"
           git push origin HEAD:main
+
+# Retry after the Pages workflow was seeded through the authenticated UI.
