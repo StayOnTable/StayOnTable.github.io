@@ -1,0 +1,47 @@
+{
+  "name": "personal-brand-site",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "prebuild": "npm run content:validate && npm run investment:validate && npm run privacy:repository",
+    "build": "next build --webpack",
+    "postbuild": "node scripts/validate-public-build.mjs && npm run privacy:out",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run test:content && npm run test:investment && npm run test:privacy && npm run build",
+    "test:content": "node --import tsx --test tests/content/publication-gate.test.ts tests/content/journey.test.ts",
+    "test:investment": "node --import tsx --test tests/investment/privacy.test.ts tests/investment/projection.test.ts tests/investment/twr.test.ts",
+    "test:privacy": "node --test tests/repository-privacy.test.mjs",
+    "investment:build": "node --import tsx scripts/investment/build-public-panel.ts",
+    "investment:validate": "node --import tsx scripts/investment/validate-public-panel.ts src/content/investment-public.json",
+    "content:validate": "node --import tsx scripts/content/validate-publications.ts",
+    "privacy:repository": "node scripts/privacy/validate-repository.mjs .",
+    "privacy:out": "node scripts/privacy/validate-repository.mjs out"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "^16.0.5",
+    "lucide-react": "^0.468.0",
+    "next": "^16.0.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^3.3.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^16.0.5",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

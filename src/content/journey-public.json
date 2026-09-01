@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "journey-public-feed-v1",
+  "entries": [
+    {
+      "schemaVersion": "journey-public-v1",
+      "slug": "product-interview-notes",
+      "title": "一次 AI 产品业务面的复盘",
+      "company": "AI 应用团队 A",
+      "role": "产品 / 增长方向",
+      "round": "业务面复盘",
+      "interviewStatus": "复盘中",
+      "publishedAt": "2026-08-29",
+      "summary": "重点不在给出一个漂亮答案，而是把模糊目标拆成可以验证的业务假设。",
+      "body": "重点不在给出一个漂亮答案，而是把模糊目标拆成可以验证的业务假设。",
+      "tags": ["示例"],
+      "href": "/journey/product-interview-notes/",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "contentSha256": null
+    },
+    {
+      "schemaVersion": "journey-public-v1",
+      "slug": "content-platform-case-placeholder",
+      "title": "案例题记录占位",
+      "company": "内容平台 B",
+      "role": "策略产品方向",
+      "round": "案例题记录",
+      "interviewStatus": "已完成",
+      "publishedAt": "2026-08-21",
+      "summary": "这次让我重新检查：指标树里哪些是结果，哪些只是看起来很忙的过程指标。",
+      "body": "这次让我重新检查：指标树里哪些是结果，哪些只是看起来很忙的过程指标。",
+      "tags": ["示例"],
+      "href": "/journey/content-platform-case-placeholder/",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "contentSha256": null
+    },
+    {
+      "schemaVersion": "journey-public-v1",
+      "slug": "tool-product-first-round-placeholder",
+      "title": "第一轮沟通记录占位",
+      "company": "工具产品 C",
+      "role": "AI 产品方向",
+      "round": "第一轮沟通",
+      "interviewStatus": "进行中",
+      "publishedAt": "2026-08-12",
+      "summary": "把个人项目讲成一个有约束、有取舍、有证据的产品故事。",
+      "body": "把个人项目讲成一个有约束、有取舍、有证据的产品故事。",
+      "tags": ["示例"],
+      "href": "/journey/tool-product-first-round-placeholder/",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "contentSha256": null
+    }
+  ]
+}

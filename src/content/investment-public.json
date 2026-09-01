@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "investment-public-v1",
+  "asOfDate": "2025-04-04",
+  "inceptionDate": "2025-04-01",
+  "disclaimer": "仅为个人投资复盘与记录，不构成任何投资建议。市场有风险，请独立判断。",
+  "grossSecuritiesMarketValueUsd": 0,
+  "performance": {
+    "weeklyReturnPct": 0,
+    "ytdReturnPct": 0,
+    "sinceInceptionReturnPct": 0,
+    "maxDrawdownPct": 0,
+    "weeklySeries": [
+      {
+        "weekEnding": "2025-04-04",
+        "weeklyReturnPct": 0,
+        "portfolioIndex": 100
+      }
+    ]
+  },
+  "positions": [],
+  "weeklyOptionTrades": []
+}

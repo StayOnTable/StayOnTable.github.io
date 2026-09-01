@@ -1,0 +1,29 @@
+import { ContentNotice } from "@/components/ui";
+import { InvestmentDisclaimer } from "@/components/investment-disclaimer";
+
+<article className="article-shell article-shell--investing">
+  <header className="article-header">
+    <div className="eyebrow">投资周报 · 2026 W35 · 演示</div>
+    <h1>本周没有真实数据，先把复盘框架搭好</h1>
+    <p>首次回填与人工预览通过后，再启用每周六更新。</p>
+    <InvestmentDisclaimer marker="start" />
+  </header>
+
+  <ContentNotice>本页是结构演示，不含任何真实收益、持仓、交易或投资观点。</ContentNotice>
+
+  <div className="prose">
+    ## 本周发生了什么
+
+    数据接入后，这里会只描述经公开来源核验的市场变化，以及它们与持仓变化之间可证实的关系。不会用事后叙事替代当时的真实判断。
+
+    ## 做得对与做得不够好的地方
+
+    每周至少保留一条具体判断：当时看到了什么证据、采取了什么动作、哪一种结果会说明判断需要被推翻。
+
+    ## 下周观察
+
+    观察项会尽量写成可验证条件，而不是笼统的涨跌预测。涉及期权时，会额外提示市值不等于名义敞口或最大风险。
+  </div>
+
+  <InvestmentDisclaimer marker="end" />
+</article>

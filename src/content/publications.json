@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "publication-manifest-v1",
+  "timezone": "Asia/Shanghai",
+  "publications": [
+    {
+      "source": "src/app/investing/weekly/2026-w35/page.mdx",
+      "route": "/investing/weekly/2026-w35/",
+      "title": "本周没有真实数据，先把复盘框架搭好",
+      "contentType": "investment-review",
+      "publishedAt": "2026-08-29",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "sha256": null
+    },
+    {
+      "source": "src/app/journey/product-interview-notes/page.mdx",
+      "route": "/journey/product-interview-notes/",
+      "title": "一次 AI 产品业务面的复盘",
+      "contentType": "journey",
+      "publishedAt": "2026-08-29",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "sha256": null
+    },
+    {
+      "source": "src/app/library/2026-08-31/page.mdx",
+      "route": "/library/2026-08-31/",
+      "title": "从收藏到观点：建立自己的内容处理管线",
+      "contentType": "library",
+      "publishedAt": "2026-08-31",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "sha256": null
+    },
+    {
+      "source": "src/app/notes/build-in-public/page.mdx",
+      "route": "/notes/build-in-public/",
+      "title": "为什么我要把学习和作品放到同一个地方",
+      "contentType": "note",
+      "publishedAt": "2026-08-26",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "sha256": null
+    },
+    {
+      "source": "src/app/notes/video-workflow/page.mdx",
+      "route": "/notes/video-workflow/",
+      "title": "把一次剪辑，变成下一次可以复用的系统",
+      "contentType": "note",
+      "publishedAt": "2026-08-30",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "sha256": null
+    }
+  ]
+}
