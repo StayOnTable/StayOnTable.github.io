@@ -9,8 +9,13 @@ export const metadata: Metadata = {
 };
 
 const contextRepository = "https://github.com/sunyuzheng/lizheng-open-context";
+const contextLicense = "https://creativecommons.org/licenses/by/4.0/deed.zh-hans";
 const lizhengProfile = "https://www.lizheng.ai/";
 const workToMoneyCourse = "https://www.bilibili.com/cheese/play/ep1459702";
+const onlineAskReady = Boolean(
+  process.env.NEXT_PUBLIC_ASK_API_URL?.trim()
+  && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim(),
+);
 
 const principles = [
   { icon: Waypoints, title: "先澄清，再建议", body: "先确认目标、时间和约束，不用一个宽泛答案覆盖所有场景。" },
@@ -91,7 +96,7 @@ export default function AskPage() {
         eyebrow="ASK / 问问立正"
         title="把问题说清，也把答案的来处说清"
         description="选择几个关键条件，看看一个基于公开 Context 的问答助手，会怎样理解你的问题、标注依据，并把建议变成下一步。"
-        aside={<div className="coming-chip"><BrainCircuit size={18} /><span>MiniMax + Open Context</span><strong>本地版本可用</strong></div>}
+        aside={<div className="coming-chip"><BrainCircuit size={18} /><span>MiniMax + Open Context</span><strong>{onlineAskReady ? "线上问答可用" : "接入准备中"}</strong></div>}
       />
 
       <section className="ask-context" aria-labelledby="ask-context-title">
@@ -104,7 +109,7 @@ export default function AskPage() {
             <a href={workToMoneyCourse} rel="noreferrer" target="_blank">《真本事：如何从会工作到会赚钱？》</a>。
           </p>
           <p>我正在基于他主动开源的 Context，把文章、精选评论、视频与核心主张整理成一个可检索、可溯源的问答入口，并保留来源、时间与内容边界。</p>
-          <p>“问问立正”会以这套公开材料为知识来源，独立搭建检索、判断分层与引用流程。它不是人格模仿，也不代表立正本人回答。</p>
+          <p>“问问立正”会以这套公开材料为知识来源，独立搭建检索、判断分层与引用流程。它不是人格模仿，也不代表立正本人回答；内容使用遵循 <a href={contextLicense} rel="noreferrer" target="_blank">CC BY 4.0</a> 许可。</p>
           <a className="ask-context__repository" href={contextRepository} rel="noreferrer" target="_blank">
             查看立正 Open Context 源仓库 <ArrowUpRight size={15} aria-hidden="true" />
           </a>
@@ -120,7 +125,7 @@ export default function AskPage() {
       <div className="ask-layout">
         <AskPreview />
         <aside className="ask-side">
-          <div className="ask-side__note"><span className="placeholder-badge">本地可用</span><p>前端已经接好窄权限问答接口。未连接后端时自动保持关闭；API Key 永远只保存在服务端。</p></div>
+          <div className="ask-side__note"><span className="placeholder-badge">{onlineAskReady ? "线上试用" : "安全接入中"}</span><p>公开问答通过 Cloudflare Worker 转发，API Key 只保存在服务端；提问会发送至 MiniMax 生成回答，本站不持久化保存会话。</p></div>
           {principles.map(({ icon: Icon, title, body }) => (
             <div className="principle" key={title}>
               <Icon size={19} aria-hidden="true" />

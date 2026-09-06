@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 type Question = {
   key: string;
@@ -61,6 +62,9 @@ type ConversationTurn = {
 
 const OTHER_OPTION = "其他";
 const ASK_API_URL = process.env.NEXT_PUBLIC_ASK_API_URL?.trim() ?? "";
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
+const ASK_API_IS_LOCAL = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//u.test(ASK_API_URL);
+const ASK_CONFIGURATION_READY = Boolean(ASK_API_URL && (ASK_API_IS_LOCAL || TURNSTILE_SITE_KEY));
 const basicQuestions: readonly Question[] = [
   {
     key: "problem",
@@ -100,16 +104,21 @@ function resolvedAnswer(key: string, answers: Record<string, string>, otherAnswe
   return (answers[key] === OTHER_OPTION ? otherAnswers[key]?.trim() : answers[key]) ?? "";
 }
 
+function boundedHistoryText(value: string, maxLength: number) {
+  const normalized = value.trim();
+  return normalized.length <= maxLength ? normalized : `${normalized.slice(0, maxLength - 1)}…`;
+}
+
 function conversationHistory(turns: ConversationTurn[]) {
   return turns.slice(-3).flatMap((turn) => [
-    { role: "user" as const, content: turn.question },
+    { role: "user" as const, content: boundedHistoryText(turn.question, 250) },
     {
       role: "assistant" as const,
-      content: [
+      content: boundedHistoryText([
         turn.result.answer.judgment,
         ...turn.result.answer.reasoning.map((item) => item.text),
         `下一步：${turn.result.answer.nextExperiment.action}`,
-      ].join("\n"),
+      ].join("\n"), 600),
     },
   ]);
 }
@@ -229,6 +238,8 @@ export function AskPreview() {
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetNonce, setTurnstileResetNonce] = useState(0);
 
   const scenarioQuestion = useMemo<Question>(() => ({
     key: "scenario",
@@ -266,8 +277,12 @@ export function AskPreview() {
   }
 
   async function ask(nextQuestion: string) {
-    if (!ASK_API_URL) {
-      setError("问答服务尚未连接。请先启动本地 Ask 服务。");
+    if (!ASK_CONFIGURATION_READY) {
+      setError("问答服务尚未完成安全配置，请稍后再试。");
+      return;
+    }
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError("安全验证还在进行，请稍等片刻再提交。");
       return;
     }
     const normalizedQuestion = nextQuestion.trim() || "请根据我的选择，帮我形成判断和一个可以验证的下一步。";
@@ -284,6 +299,7 @@ export function AskPreview() {
           scenario: resolvedAnswer("scenario", answers, otherAnswers),
           question: normalizedQuestion,
           history: conversationHistory(turns),
+          ...(TURNSTILE_SITE_KEY ? { turnstileToken } : {}),
         }),
       });
       const payload = await response.json() as AskResult | { error?: string };
@@ -298,6 +314,10 @@ export function AskPreview() {
       setError(requestError instanceof Error ? requestError.message : "问答暂时不可用");
     } finally {
       setLoading(false);
+      if (TURNSTILE_SITE_KEY) {
+        setTurnstileToken("");
+        setTurnstileResetNonce((current) => current + 1);
+      }
     }
   }
 
@@ -307,9 +327,15 @@ export function AskPreview() {
     <div className="ask-demo">
       <div className="ask-demo__header">
         <div className="assistant-avatar"><Sparkles size={19} aria-hidden="true" /></div>
-        <div><strong>问问立正</strong><span><i data-ready={Boolean(ASK_API_URL)} /> {ASK_API_URL ? "问答通道已配置" : "等待本地问答服务"}</span></div>
+        <div><strong>问问立正</strong><span><i data-ready={ASK_CONFIGURATION_READY} /> {ASK_CONFIGURATION_READY ? (ASK_API_IS_LOCAL ? "本地问答已开启" : "线上问答已开启") : "等待问答服务"}</span></div>
         <LockKeyhole size={17} aria-label="会话不保存，密钥只在服务端" />
       </div>
+
+      <TurnstileWidget
+        onTokenChange={setTurnstileToken}
+        resetNonce={turnstileResetNonce}
+        siteKey={TURNSTILE_SITE_KEY}
+      />
 
       <div className="ask-demo__progress" aria-label={`当前步骤：${progressStage}`}>
         <span data-active={stage === "basics"}>1 · 选择问题</span>
@@ -383,10 +409,10 @@ export function AskPreview() {
             />
           </label>
           {error ? <p className="ask-error" role="alert"><AlertCircle size={14} />{error}</p> : null}
-          <button className="button button--primary" disabled={!ASK_API_URL || loading} type="submit">
+          <button className="button button--primary" disabled={!ASK_CONFIGURATION_READY || Boolean(TURNSTILE_SITE_KEY && !turnstileToken) || loading} type="submit">
             {loading ? <><LoaderCircle className="ask-spin" size={17} /> 正在检索公开材料</> : <><Sparkles size={17} /> 生成有来源的回答</>}
           </button>
-          <p>{ASK_API_URL ? "问题会发送到本地服务；会话不保存。" : "本地 Ask 服务启动后即可试用。"}</p>
+          <p>{ASK_CONFIGURATION_READY ? "提问会发送至 MiniMax 生成回答；本站不持久化保存会话。" : "问答服务完成安全配置后即可试用。"}</p>
         </form>
       ) : null}
 
@@ -407,7 +433,7 @@ export function AskPreview() {
                 placeholder="针对刚才的判断，再问一个具体问题"
                 value={followUp}
               />
-              <button aria-label="发送追问" disabled={loading || !followUp.trim()} type="submit">
+              <button aria-label="发送追问" disabled={loading || !followUp.trim() || Boolean(TURNSTILE_SITE_KEY && !turnstileToken)} type="submit">
                 {loading ? <LoaderCircle className="ask-spin" size={17} /> : <Send size={17} />}
               </button>
             </div>

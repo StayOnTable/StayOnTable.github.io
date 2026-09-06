@@ -53,6 +53,13 @@ npm run test:content
 
 未配置时页面会显示明确的“留言区待开启”占位，不会加载第三方脚本，也不会收集输入。
 
+若要开启“问问立正”的线上问答，还需配置两个公开的 Repository variables：
+
+- `ASK_API_URL`：完整 Worker 接口地址，例如 `https://stayontable-ask.example.workers.dev/api/ask`
+- `TURNSTILE_SITE_KEY`：Cloudflare Turnstile 的公开 Site Key
+
+MiniMax API Key 与 Turnstile Secret 只保存在 Cloudflare Worker Secret 中，绝不能写入本仓库或任何 `NEXT_PUBLIC_*` 变量。
+
 ## 上线前清单
 
 - 确认 `StayOnTable/StayOnTable.github.io` 的 Pages 工作流首次部署成功。
