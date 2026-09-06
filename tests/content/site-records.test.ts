@@ -8,7 +8,16 @@ import {
   xiaohongshuPostContentSchema,
   xiaohongshuPostSchema,
   xiaohongshuPosts,
+  siteMeta,
 } from "../../src/content/site";
+
+test("site profile exposes a stable Xiaohongshu link without transient tracking tokens", () => {
+  const profileUrl = new URL(siteMeta.xiaohongshu.profileUrl);
+
+  assert.equal(profileUrl.origin, "https://www.xiaohongshu.com");
+  assert.equal(profileUrl.pathname, "/user/profile/61f54602000000002102111b");
+  assert.equal(profileUrl.search, "");
+});
 
 test("checked-in Xiaohongshu records are explicit placeholders", () => {
   assert.ok(xiaohongshuPosts.length > 0);

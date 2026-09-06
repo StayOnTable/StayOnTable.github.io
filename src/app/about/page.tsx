@@ -44,7 +44,7 @@ export default function AboutPage() {
 
       <section className="contact-strip">
         <a href={`mailto:${siteMeta.email}`}><span className="contact-strip__label"><Mail size={17} aria-hidden="true" />邮件</span><strong className="contact-strip__email">{siteMeta.email}</strong><ArrowUpRight size={17} aria-hidden="true" /></a>
-        <div><span>小红书</span><strong>{siteMeta.xiaohongshu.handle}</strong><em>主页链接待补充</em></div>
+        <a href={siteMeta.xiaohongshu.profileUrl} target="_blank" rel="noreferrer"><span>小红书</span><strong>{siteMeta.xiaohongshu.handle}</strong><ArrowUpRight size={17} aria-hidden="true" /></a>
         <a href={siteMeta.github.profileUrl} target="_blank" rel="noreferrer"><span>GitHub</span><strong>{siteMeta.github.handle}</strong><ArrowUpRight size={17} aria-hidden="true" /></a>
       </section>
     </div>

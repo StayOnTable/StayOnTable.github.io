@@ -48,7 +48,9 @@ export default function HomePage() {
             <SiteVisitCounter />
             <div className="home-hero__contact" aria-label="联系 JoJo Liu">
               <a href={`mailto:${siteMeta.email}`}><Mail size={14} aria-hidden="true" />{siteMeta.email}</a>
-              <span><MessageCircle size={14} aria-hidden="true" />小红书 · {siteMeta.xiaohongshu.handle}</span>
+              <a href={siteMeta.xiaohongshu.profileUrl} target="_blank" rel="noreferrer">
+                <MessageCircle size={14} aria-hidden="true" />小红书 · {siteMeta.xiaohongshu.handle}
+              </a>
             </div>
           </div>
         </div>
@@ -128,10 +130,10 @@ export default function HomePage() {
             <Eyebrow>SOCIAL NOTES</Eyebrow>
             <h2>小红书上的短内容</h2>
             <p>短一些的观察、工具尝试和制作过程，会从我的小红书账号同步到这里。</p>
-            <div className="account-chip">
+            <a className="account-chip" href={siteMeta.xiaohongshu.profileUrl} target="_blank" rel="noreferrer">
               <span>{siteMeta.xiaohongshu.handle}</span>
-              <small>主页链接待补充</small>
-            </div>
+              <small>打开个人主页</small>
+            </a>
             <div className="xiaohongshu-posts" aria-label="小红书内容摘要">
               {xiaohongshuPosts.map((post) => (
                 <div className="xiaohongshu-post" key={post.title}>

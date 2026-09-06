@@ -215,6 +215,6 @@ export const siteMeta = {
   },
   xiaohongshu: {
     handle: "落得一身星",
-    profileUrl: null,
+    profileUrl: "https://www.xiaohongshu.com/user/profile/61f54602000000002102111b",
   },
 } as const;
