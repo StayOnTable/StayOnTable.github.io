@@ -7,6 +7,15 @@ import { HomeWorkbenchPreview } from "@/components/home-workbench-preview";
 import { SiteVisitCounter } from "@/components/site-visit-counter";
 import { ArrowLink, Eyebrow, PlaceholderBadge, SectionHeading } from "@/components/ui";
 import { notes, projects, siteMeta, xiaohongshuPosts } from "@/content/site";
+import investmentJson from "@/content/investment-public.json";
+import { PublicInvestmentPanelSchema } from "@/lib/investment";
+
+const investmentPanel = PublicInvestmentPanelSchema.parse(investmentJson);
+
+function formatHomeInvestmentReturn(value: number | null) {
+  if (value === null) return "—";
+  return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
 
 export const metadata: Metadata = {
   title: "首页",
@@ -156,8 +165,8 @@ export default function HomePage() {
           <div className="investing-preview__empty">
             <span className="mini-chart" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
             <div>
-              <strong>等待首次数据回填</strong>
-              <p>首次回填与人工预览通过后，计划每周六 10:00 更新。</p>
+              <strong>本周收益率 {formatHomeInvestmentReturn(investmentPanel.performance.weeklyReturnPct)}</strong>
+              <p>数据截至 {investmentPanel.asOfDate}，按周整理收益率、持仓构成与成交记录。</p>
             </div>
           </div>
           <InvestmentDisclaimer compact />
