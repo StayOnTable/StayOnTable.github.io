@@ -1,12 +1,12 @@
 import { roundNumber, weekEndingFriday } from "./date";
+import { INVESTMENT_PUBLIC_HISTORY_START_DATE } from "./constants";
 import { DailyTwrPointSchema, type DailyTwrPoint } from "./source";
 
 export type InvestmentDataQualityCode =
   | "DUPLICATE_TWR_CONFLICT"
-  | "DUPLICATE_EXPECTED_DATE"
-  | "MISSING_TRADING_DATES"
-  | "AS_OF_DATE_MISMATCH"
+  | "TWR_COVERAGE_MISMATCH"
   | "OUT_OF_RANGE_DATE"
+  | "AS_OF_DATE_MISMATCH"
   | "INVALID_FLOW_VALUATION";
 
 export class InvestmentDataQualityError extends Error {
@@ -19,53 +19,20 @@ export class InvestmentDataQualityError extends Error {
   }
 }
 
-function validateExpectedDates(expectedTradingDates: readonly string[]): string[] {
-  const seen = new Set<string>();
-  for (const date of expectedTradingDates) {
-    if (seen.has(date)) {
+/** De-duplicate a plugin TWR series and return it in ascending date order. */
+export function normalizeDailyTwrPoints(points: readonly DailyTwrPoint[]): DailyTwrPoint[] {
+  const byDate = new Map<string, DailyTwrPoint>();
+  points.forEach((rawPoint) => {
+    const point = DailyTwrPointSchema.parse(rawPoint);
+    const existing = byDate.get(point.date);
+    if (existing && Math.abs(existing.returnPct - point.returnPct) > 0.000000001) {
       throw new InvestmentDataQualityError(
-        "DUPLICATE_EXPECTED_DATE",
-        `Expected trading calendar repeats ${date}`,
+        "DUPLICATE_TWR_CONFLICT",
+        `Conflicting TWR values were supplied for ${point.date}`,
       );
     }
-    seen.add(date);
-  }
-  return [...seen].sort();
-}
-
-/**
- * Merges overlapping Flex date chunks. Identical overlap rows are de-duplicated;
- * conflicting rows fail closed so a return is never compounded twice.
- */
-export function normalizeDailyTwrChunks(
-  chunks: readonly (readonly DailyTwrPoint[])[],
-  expectedTradingDates: readonly string[],
-): DailyTwrPoint[] {
-  const byDate = new Map<string, DailyTwrPoint>();
-
-  chunks.forEach((chunk) => {
-    chunk.forEach((rawPoint) => {
-      const point = DailyTwrPointSchema.parse(rawPoint);
-      const existing = byDate.get(point.date);
-      if (existing && Math.abs(existing.returnPct - point.returnPct) > 0.000000001) {
-        throw new InvestmentDataQualityError(
-          "DUPLICATE_TWR_CONFLICT",
-          `Conflicting TWR values were supplied for ${point.date}`,
-        );
-      }
-      byDate.set(point.date, point);
-    });
+    byDate.set(point.date, point);
   });
-
-  const expected = validateExpectedDates(expectedTradingDates);
-  const missing = expected.filter((date) => !byDate.has(date));
-  if (missing.length > 0) {
-    throw new InvestmentDataQualityError(
-      "MISSING_TRADING_DATES",
-      `Missing finalized daily TWR for: ${missing.join(", ")}`,
-    );
-  }
-
   return [...byDate.values()].sort((left, right) => left.date.localeCompare(right.date));
 }
 
@@ -75,10 +42,12 @@ export function compoundReturnPct(points: readonly DailyTwrPoint[]): number {
 }
 
 export type PublicPerformance = {
+  measure: "twr";
+  coverageStartDate: string;
+  coverageEndDate: string;
   weeklyReturnPct: number;
-  ytdReturnPct: number;
-  sinceInceptionReturnPct: number;
-  maxDrawdownPct: number;
+  monthlyReturnPct: number | null;
+  quarterlyReturnPct: number | null;
   weeklySeries: Array<{
     weekEnding: string;
     weeklyReturnPct: number;
@@ -86,65 +55,116 @@ export type PublicPerformance = {
   }>;
 };
 
+function currentMonthStart(asOfDate: string): string {
+  return `${asOfDate.slice(0, 7)}-01`;
+}
+
+function currentQuarterStart(asOfDate: string): string {
+  const year = asOfDate.slice(0, 4);
+  const month = Number(asOfDate.slice(5, 7));
+  const quarterMonth = Math.floor((month - 1) / 3) * 3 + 1;
+  return `${year}-${String(quarterMonth).padStart(2, "0")}-01`;
+}
+
+function periodReturnOrNull(
+  points: readonly DailyTwrPoint[],
+  sourceCoverageStartDate: string,
+  periodStartDate: string,
+): number | null {
+  if (sourceCoverageStartDate > periodStartDate) return null;
+  const periodPoints = points.filter((point) => point.date >= periodStartDate);
+  return periodPoints.length > 0 ? compoundReturnPct(periodPoints) : null;
+}
+
+/**
+ * Build the public TWR view from normalized interval returns. The public chart
+ * starts no earlier than the fixed site record date (2026-04-01); if the
+ * plugin exposes less history, the first actually available point becomes the
+ * start instead. The boundary does not reset in a later calendar year.
+ */
 export function buildPublicPerformance(
-  dailyPoints: readonly DailyTwrPoint[],
-  asOfDate: string,
-  chartStartDate?: string,
+  rawPoints: readonly DailyTwrPoint[],
+  sourceCoverageStartDate: string,
+  coverageEndDate: string,
 ): PublicPerformance {
-  const points = [...dailyPoints].sort((left, right) => left.date.localeCompare(right.date));
-  if (points.length === 0 || points.at(-1)?.date !== asOfDate) {
+  const sourcePoints = normalizeDailyTwrPoints(rawPoints);
+  if (
+    sourcePoints.length === 0 ||
+    sourcePoints[0]?.date !== sourceCoverageStartDate ||
+    sourcePoints.at(-1)?.date !== coverageEndDate
+  ) {
     throw new InvestmentDataQualityError(
-      "AS_OF_DATE_MISMATCH",
-      "The latest finalized daily TWR date must equal the public as-of date",
+      "TWR_COVERAGE_MISMATCH",
+      "The first and last plugin TWR dates must match the declared source coverage",
+    );
+  }
+  if (
+    sourcePoints.some(
+      (point) => point.date < sourceCoverageStartDate || point.date > coverageEndDate,
+    )
+  ) {
+    throw new InvestmentDataQualityError(
+      "OUT_OF_RANGE_DATE",
+      "Plugin TWR points must stay inside the declared source coverage",
     );
   }
 
-  const chartPoints = chartStartDate
-    ? points.filter((point) => point.date > chartStartDate)
-    : points;
+  const points = sourcePoints.filter(
+    (point) => point.date >= INVESTMENT_PUBLIC_HISTORY_START_DATE,
+  );
+  const coverageStartDate = points[0]?.date;
+  if (!coverageStartDate) {
+    throw new InvestmentDataQualityError(
+      "TWR_COVERAGE_MISMATCH",
+      `No plugin TWR points are available on or after ${INVESTMENT_PUBLIC_HISTORY_START_DATE}`,
+    );
+  }
+
   const weeklyGroups = new Map<string, DailyTwrPoint[]>();
-  chartPoints.forEach((point) => {
-    const weekEnding = weekEndingFriday(point.date);
-    const current = weeklyGroups.get(weekEnding) ?? [];
-    current.push(point);
-    weeklyGroups.set(weekEnding, current);
+  points.forEach((point) => {
+    const week = weekEndingFriday(point.date);
+    const group = weeklyGroups.get(week) ?? [];
+    group.push(point);
+    weeklyGroups.set(week, group);
   });
 
   let portfolioIndex = 100;
-  const weeklySeries: PublicPerformance["weeklySeries"] = chartStartDate
-    ? [{ weekEnding: chartStartDate, weeklyReturnPct: 0, portfolioIndex: 100 }]
-    : [];
-  weeklySeries.push(
-    ...[...weeklyGroups.entries()]
+  const weeklySeries = [...weeklyGroups.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([, weekPoints]) => {
       weekPoints.sort((left, right) => left.date.localeCompare(right.date));
-      const weekEnding = weekPoints.at(-1)?.date ?? asOfDate;
       const weeklyReturnPct = compoundReturnPct(weekPoints);
       portfolioIndex = roundNumber(portfolioIndex * (1 + weeklyReturnPct / 100));
-      return { weekEnding, weeklyReturnPct, portfolioIndex };
-    }),
-  );
+      return {
+        weekEnding: weekPoints.at(-1)?.date ?? coverageEndDate,
+        weeklyReturnPct,
+        portfolioIndex,
+      };
+    });
 
-  let dailyIndex = 100;
-  let peakIndex = 100;
-  let maxDrawdownPct = 0;
-  points.forEach((point) => {
-    dailyIndex *= 1 + point.returnPct / 100;
-    peakIndex = Math.max(peakIndex, dailyIndex);
-    const drawdown = peakIndex === 0 ? -100 : (dailyIndex / peakIndex - 1) * 100;
-    maxDrawdownPct = Math.min(maxDrawdownPct, drawdown);
-  });
-
-  const asOfYear = asOfDate.slice(0, 4);
-  const ytdPoints = points.filter((point) => point.date.startsWith(`${asOfYear}-`));
   const finalPoint = weeklySeries.at(-1);
+  if (!finalPoint) {
+    throw new InvestmentDataQualityError(
+      "TWR_COVERAGE_MISMATCH",
+      "At least one public weekly TWR point is required",
+    );
+  }
 
   return {
-    weeklyReturnPct: finalPoint?.weeklyReturnPct ?? 0,
-    ytdReturnPct: compoundReturnPct(ytdPoints),
-    sinceInceptionReturnPct: compoundReturnPct(points),
-    maxDrawdownPct: roundNumber(maxDrawdownPct),
+    measure: "twr",
+    coverageStartDate,
+    coverageEndDate,
+    weeklyReturnPct: finalPoint.weeklyReturnPct,
+    monthlyReturnPct: periodReturnOrNull(
+      sourcePoints,
+      sourceCoverageStartDate,
+      currentMonthStart(coverageEndDate),
+    ),
+    quarterlyReturnPct: periodReturnOrNull(
+      sourcePoints,
+      sourceCoverageStartDate,
+      currentQuarterStart(coverageEndDate),
+    ),
     weeklySeries,
   };
 }

@@ -27,9 +27,9 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <Link className="brand-mark" href="/" aria-label="在场笔记，返回首页">
+        <Link className="brand-mark" href="/" aria-label="Stay on table，返回首页">
           <span className="brand-mark__dot" aria-hidden="true" />
-          <span>在场笔记</span>
+          <span>Stay on table</span>
         </Link>
 
         <nav className="pill-nav" aria-label="主要导航">

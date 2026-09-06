@@ -31,11 +31,13 @@ jobs:
       - run: npm run test:content
       - run: npm run test:investment
       - run: npm run test:privacy
+      - run: npm run investment:validate:release
       - run: npm run privacy:repository
       - run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: ${{ steps.pages.outputs.base_url }}
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_ASK_API_URL: ${{ vars.ASK_API_URL }}
           NEXT_PUBLIC_GISCUS_REPO: ${{ vars.GISCUS_REPO }}
           NEXT_PUBLIC_GISCUS_REPO_ID: ${{ vars.GISCUS_REPO_ID }}
           NEXT_PUBLIC_GISCUS_CATEGORY: ${{ vars.GISCUS_CATEGORY }}

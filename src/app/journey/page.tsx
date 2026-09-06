@@ -1,69 +1,76 @@
 import type { Metadata } from "next";
-import { CalendarClock, LockKeyhole } from "lucide-react";
-import Link from "next/link";
+
 import { GiscusComments } from "@/components/giscus-comments";
-import { PageIntro, PlaceholderBadge } from "@/components/ui";
-import { journeyEntries } from "@/content/journey";
+import { Eyebrow } from "@/components/ui";
+import { journeyEntries, journeyMoments } from "@/content/journey";
+
+import { JourneyTimeline } from "./journey-timeline";
+import styles from "./journey.module.css";
 
 export const metadata: Metadata = {
   title: "求职旅程",
-  description: "经过脱敏与延迟发布的社招进度、面试复盘和阶段心得。",
+  description: "社招进度、面试节点、简短复盘与沿途手记。",
 };
 
 export default function JourneyPage() {
   return (
-    <div className="shell page-shell">
-      <PageIntro
-        eyebrow="JOURNEY / 求职旅程"
-        title="把求职当作一次持续校准"
-        description="这里记录我在社招过程里遇到的问题、做过的判断和每一轮复盘。公开的是可迁移的方法，不是敏感的实时行程。"
-        aside={
-          <div className="privacy-note">
-            <LockKeyhole size={17} aria-hidden="true" />
-            <p><strong>隐私保护中</strong><br />只显示发布日期；内容经过脱敏、延迟与人工确认。</p>
+    <div className={`shell page-shell ${styles.page}`}>
+      <header className={styles.intro}>
+        <Eyebrow>JOURNEY / 求职旅程</Eyebrow>
+        <div className={styles.introCopy}>
+          <h1>最近走到哪一步？</h1>
+          <p>面试节点、简短复盘，以及一些还在发生的心情。</p>
+        </div>
+      </header>
+
+      <section className={styles.timelineSection} aria-labelledby="journey-timeline-title">
+        <div className={styles.sectionHeading}>
+          <div>
+            <span className={styles.sectionKicker}>INTERVIEW MAP</span>
+            <h2 id="journey-timeline-title">面试时间线</h2>
           </div>
-        }
-      />
-
-      <div className="journey-summary" aria-label="当前求职状态">
-        <div><span>当前阶段</span><strong>探索与面试并行</strong><PlaceholderBadge /></div>
-        <div><span>关注方向</span><strong>AI 产品 · 内容工具</strong><PlaceholderBadge /></div>
-        <div><span>更新节奏</span><strong>确认后不定期发布</strong></div>
-      </div>
-
-      <section className="timeline" aria-label="求职记录时间轴">
-        <div className="timeline__line" aria-hidden="true" />
-        {journeyEntries.map((entry, index) => (
-          <article className="timeline-entry" key={entry.slug}>
-            <div className="timeline-entry__date">
-              <span className="timeline-entry__dot" aria-hidden="true" />
-              <time dateTime={entry.publishedAt}>{entry.publishedAt}</time>
-              <small>发布日期</small>
-            </div>
-            <Link className="timeline-card" href={entry.href}>
-              <div className="timeline-card__topline">
-                <span className="status-chip" data-status={entry.interviewStatus}>{entry.interviewStatus}</span>
-                <span>记录 0{journeyEntries.length - index}</span>
-              </div>
-              <div>
-                {entry.placeholder ? <PlaceholderBadge /> : null}
-                <h2>{entry.company}</h2>
-                <p className="timeline-card__role">{entry.role} · {entry.round}</p>
-              </div>
-              <blockquote>{entry.summary}</blockquote>
-              <span className="timeline-card__link">阅读复盘 →</span>
-            </Link>
-          </article>
-        ))}
+          <p>日期与高度展示进度；移入节点查看简述，点击展开完整复盘。</p>
+        </div>
+        <JourneyTimeline entries={journeyEntries} />
       </section>
 
-      <aside className="process-card">
-        <CalendarClock size={20} aria-hidden="true" />
-        <div>
-          <strong>一条记录如何来到这里？</strong>
-          <p>真实记录先留在私有端，经过去标识化、3–5 天随机延迟和逐条确认，公开页只保留对他人有帮助的部分。</p>
-        </div>
-      </aside>
+      <div className={styles.contextGrid}>
+        <section className={styles.statusPanel} aria-labelledby="journey-status-title">
+          <div className={styles.panelHeading}>
+            <span>STATUS</span>
+            <h2 id="journey-status-title">正在进行</h2>
+          </div>
+          <dl className={styles.statusList}>
+            <div>
+              <dt>当前阶段</dt>
+              <dd>大厂与 AI startup 并行</dd>
+            </div>
+            <div>
+              <dt>关注方向</dt>
+              <dd>推荐算法 · 大模型算法</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className={styles.momentsPanel} aria-labelledby="journey-moments-title">
+          <div className={styles.momentsHeading}>
+            <div className={styles.panelHeading}>
+              <span>FIELD NOTES</span>
+              <h2 id="journey-moments-title">此刻手记</h2>
+            </div>
+            <span className={styles.demoBadge}>示例占位</span>
+          </div>
+          <ol className={styles.momentList}>
+            {journeyMoments.map((moment) => (
+              <li key={moment.slug}>
+                <time dateTime={moment.publishedAt}>{moment.publishedAt}</time>
+                <p>{moment.text}</p>
+              </li>
+            ))}
+          </ol>
+          <p className={styles.momentsNotice}>当前为版式示例，之后替换为 JoJo 确认过的真实短句。</p>
+        </section>
+      </div>
 
       <GiscusComments />
     </div>

@@ -10,7 +10,8 @@ const PLACEHOLDER_WORD_PATTERN = /示例|占位|演示|虚构/;
 const PRIVATE_FIELD_PATTERN =
   /\b(?:eventAt|actualEventDate|interviewAt|occurredAt|privateNotes|rawNotes|sourceMaterial|candidateId|recruiter(?:Name|Email|Phone)?|interviewer(?:Name|Email|Phone)?)\b\s*(?::|=)/i;
 const LOCAL_PATH_PATTERN = /\/(?:Users|home)\/[^\s"'<>]+/;
-const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
+const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+export const PUBLIC_EMAIL_ALLOWLIST = new Set(["zdliu20@fudan.edu.cn"]);
 const MAINLAND_PHONE_PATTERN = /(?<!\d)1[3-9]\d{9}(?!\d)/;
 const CREDENTIAL_ASSIGNMENT_PATTERN =
   /\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|flex[_-]?token|query[_-]?id|client[_-]?secret|password)\b\s*[:=]\s*["']?[^\s"']+/i;
@@ -135,6 +136,11 @@ function contentNoticeBodies(source: string): string[] {
   );
 }
 
+function hasUnapprovedEmail(source: string): boolean {
+  const matches = source.match(EMAIL_PATTERN) ?? [];
+  return matches.some((email) => !PUBLIC_EMAIL_ALLOWLIST.has(email.toLowerCase()));
+}
+
 export function validatePublicationGate(
   inputs: PublicationRepositoryInputs,
   asOfDate = beijingDay(),
@@ -179,7 +185,7 @@ export function validatePublicationGate(
 
     if (PRIVATE_FIELD_PATTERN.test(source)) errors.push(`${label}: possible private field marker`);
     if (LOCAL_PATH_PATTERN.test(source)) errors.push(`${label}: possible local absolute path`);
-    if (EMAIL_PATTERN.test(source)) errors.push(`${label}: possible email address`);
+    if (hasUnapprovedEmail(source)) errors.push(`${label}: possible email address`);
     if (MAINLAND_PHONE_PATTERN.test(source)) errors.push(`${label}: possible mainland phone number`);
     if (CREDENTIAL_ASSIGNMENT_PATTERN.test(source)) {
       errors.push(`${label}: possible credential assignment`);

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "journey-moments-feed-v1",
+  "entries": [
+    {
+      "schemaVersion": "journey-moment-v1",
+      "slug": "review-before-answer-placeholder",
+      "publishedAt": "2026-08-30",
+      "text": "示例手记：复盘不是为了找到标准答案，而是看清下一次应该先问什么。",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "contentSha256": null
+    },
+    {
+      "schemaVersion": "journey-moment-v1",
+      "slug": "write-the-criteria-placeholder",
+      "publishedAt": "2026-08-24",
+      "text": "示例手记：机会并行的时候，先把自己的判断标准写下来。",
+      "publicationStatus": "placeholder",
+      "placeholder": true,
+      "contentSha256": null
+    }
+  ]
+}

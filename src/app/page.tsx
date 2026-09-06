@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { ArrowDown, ArrowUpRight, BookOpen, CircleDot, Sparkles } from "lucide-react";
+import { ArrowUpRight, BookOpen, CircleDot, Mail, MessageCircle, Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { InvestmentDisclaimer } from "@/components/investment-disclaimer";
+import { HomeWorkbenchPreview } from "@/components/home-workbench-preview";
+import { SiteVisitCounter } from "@/components/site-visit-counter";
 import { ArrowLink, Eyebrow, PlaceholderBadge, SectionHeading } from "@/components/ui";
 import { notes, projects, siteMeta, xiaohongshuPosts } from "@/content/site";
 
@@ -17,12 +20,12 @@ export default function HomePage() {
         <div className="home-hero__copy">
           <Eyebrow>个人主页 · 持续建设中</Eyebrow>
           <h1>
-            把思考变成
-            <br />
-            <em>可以被看见</em>的作品。
+            <span lang="en">Stay on the table，</span>
+            <span>留在<em>AI时代</em>的牌桌上</span>
           </h1>
           <p className="home-hero__lead">
-            这里收集我的写作、项目、求职旅程、每日输入与投资复盘。不是完成后的陈列柜，而是一张持续生长的工作台。
+            <span>这里收集我的写作、项目、求职旅程、每日输入与投资复盘。</span>
+            <span>不是完成后的陈列柜，而是一张持续生长的工作台。</span>
           </p>
           <div className="hero-actions">
             <Link className="button button--primary" href="/projects/">
@@ -32,27 +35,16 @@ export default function HomePage() {
               先认识我
             </Link>
           </div>
-          <p className="hero-placeholder-note">
-            <PlaceholderBadge /> 首页介绍为示例文案，等待本人最终确认。
-          </p>
+          <div className="home-hero__meta">
+            <SiteVisitCounter />
+            <div className="home-hero__contact" aria-label="联系 JoJo Liu">
+              <a href={`mailto:${siteMeta.email}`}><Mail size={14} aria-hidden="true" />{siteMeta.email}</a>
+              <span><MessageCircle size={14} aria-hidden="true" />小红书 · {siteMeta.xiaohongshu.handle}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="signal-card" aria-label="当前状态">
-          <div className="signal-card__topline">
-            <span>NOW / 2026</span>
-            <span className="live-dot"><i /> ONGOING</span>
-          </div>
-          <div className="signal-card__center">
-            <span className="signal-card__label">现在最在意的事</span>
-            <strong>做出能被使用、<br />也能被讨论的东西。</strong>
-          </div>
-          <div className="signal-card__grid">
-            <div><span>01</span><p>内容工作流</p></div>
-            <div><span>02</span><p>AI 产品实验</p></div>
-            <div><span>03</span><p>求职与复盘</p></div>
-          </div>
-          <ArrowDown className="signal-card__arrow" size={20} aria-hidden="true" />
-        </div>
+        <HomeWorkbenchPreview />
       </section>
 
       <section className="now-strip" aria-label="近期状态">
@@ -120,20 +112,23 @@ export default function HomePage() {
 
       <section className="split-feature shell">
         <article className="xiaohongshu-card" id="xiaohongshu">
-          <div className="xiaohongshu-card__icon">小</div>
+          <div className="xiaohongshu-card__icon">
+            <Image src="/xiaohongshu.png" alt="小红书" width={32} height={32} />
+          </div>
           <div className="xiaohongshu-card__body">
             <Eyebrow>SOCIAL NOTES</Eyebrow>
             <h2>小红书上的短内容</h2>
-            <p>短一些的观察、工具尝试和制作过程，会先在这里发生。</p>
+            <p>短一些的观察、工具尝试和制作过程，会从我的小红书账号同步到这里。</p>
             <div className="account-chip">
               <span>{siteMeta.xiaohongshu.handle}</span>
-              <PlaceholderBadge />
+              <small>主页链接待补充</small>
             </div>
             <div className="xiaohongshu-posts" aria-label="小红书内容摘要">
               {xiaohongshuPosts.map((post) => (
                 <div className="xiaohongshu-post" key={post.title}>
                   <div>
                     <strong>{post.title}</strong>
+                    {post.placeholder ? <PlaceholderBadge /> : null}
                     <small>{post.summary}</small>
                   </div>
                   {post.sourceUrl ? (

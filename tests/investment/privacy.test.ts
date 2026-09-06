@@ -12,7 +12,11 @@ import {
 } from "../../src/lib/investment";
 import { validInvestmentSource } from "./fixtures";
 
-test("accepts the checked-in placeholder through both privacy and schema gates", () => {
+const SYNTHETIC_ACCOUNT_ID = ["U", "123", "4567"].join("");
+const SYNTHETIC_LOCAL_ENDPOINT = ["local", "host", ":40", "02"].join("");
+
+test("accepts the checked-in published v3 snapshot through privacy and schema gates", () => {
+  assert.equal(samplePanel.publicationStatus, "published");
   assert.doesNotThrow(() => assertPublicInvestmentPrivacy(samplePanel));
   assert.doesNotThrow(() => PublicInvestmentPanelSchema.parse(samplePanel));
 });
@@ -25,31 +29,36 @@ test("requires the exact full disclaimer", () => {
   assert.throws(() => PublicInvestmentPanelSchema.parse(missingDisclaimer));
 });
 
-test("rejects financing, account-equity, credentials, IDs, and dollar P&L keys", () => {
+test("rejects position amount, account, financing, quantity, exact-time, fee, and dollar P&L keys", () => {
   const unsafe = {
     safe: {
-      marketValueAbsUsd: 100,
+      amountAbs: 100,
       cashBalance: -5000,
       marginRequirement: 1000,
       netLiquidationValue: 25000,
       accountId: "redacted-in-test",
-      flexToken: "redacted-in-test",
+      token: "redacted-in-test",
       orderId: 42,
+      quantity: 5,
+      executionTime: "09:30:00",
+      commission: 1,
       pnlUsd: 500,
-      realizedPnlUsd: 500,
     },
   };
 
   const paths = scanPublicInvestmentPayload(unsafe).map((violation) => violation.path);
   assert.deepEqual(paths, [
+    "$.safe.amountAbs",
     "$.safe.cashBalance",
     "$.safe.marginRequirement",
     "$.safe.netLiquidationValue",
     "$.safe.accountId",
-    "$.safe.flexToken",
+    "$.safe.token",
     "$.safe.orderId",
+    "$.safe.quantity",
+    "$.safe.executionTime",
+    "$.safe.commission",
     "$.safe.pnlUsd",
-    "$.safe.realizedPnlUsd",
   ]);
   assert.throws(
     () => assertPublicInvestmentPrivacy(unsafe),
@@ -59,35 +68,39 @@ test("rejects financing, account-equity, credentials, IDs, and dollar P&L keys",
 
 test("rejects embedded IBKR account identifiers and local connection details", () => {
   const violations = scanPublicInvestmentPayload({
-    label: "account: U1234567",
-    endpoint: "localhost:4002",
+    label: `account: ${SYNTHETIC_ACCOUNT_ID}`,
+    endpoint: SYNTHETIC_LOCAL_ENDPOINT,
   });
 
   assert.equal(violations.some((violation) => violation.code === "ACCOUNT_IDENTIFIER"), true);
   assert.equal(violations.some((violation) => violation.code === "CONNECTION_DETAIL"), true);
 });
 
-test("does not reject allowed gross/absolute market values or option fill fields", () => {
+test("allows USD-only allocations and aggregated trade amounts", () => {
   const panel = buildPublicInvestmentPanel(validInvestmentSource());
   assert.deepEqual(scanPublicInvestmentPayload(panel), []);
 });
 
-test("strict public schema rejects unknown fields even when their name looks harmless", () => {
+test("strict public schema rejects every unknown field", () => {
   const panel = buildPublicInvestmentPanel(validInvestmentSource());
   assert.throws(() => PublicInvestmentPanelSchema.parse({ ...panel, internalNote: "hidden" }));
+  assert.throws(() =>
+    PublicInvestmentPanelSchema.parse({
+      ...panel,
+      weeklyTrades: [{ ...panel.weeklyTrades[0], orderId: "private" }],
+    }),
+  );
 });
 
-test("rejects cash, financing, margin, or account equity disguised as a public position", () => {
+test("rejects cash, financing, margin, or account equity disguised as a position", () => {
   const panel = buildPublicInvestmentPanel(validInvestmentSource());
   const disguisedCash = {
     ...panel,
-    grossSecuritiesMarketValueUsd: 50000,
     positions: [
       {
         assetType: "other",
         displaySymbol: "USD CASH",
         direction: "long",
-        marketValueAbsUsd: 50000,
         allocationPct: 100,
       },
     ],
@@ -97,9 +110,37 @@ test("rejects cash, financing, margin, or account equity disguised as a public p
   assert.throws(() => PublicInvestmentPanelSchema.parse(disguisedCash));
 });
 
-test("rejects a stale weekly series whose last date is older than asOfDate", () => {
+test("rejects option contract details hidden inside displaySymbol", () => {
+  const panel = buildPublicInvestmentPanel(validInvestmentSource());
+  const detailedLabels = [
+    "DEMO 2027-06-17 105C",
+    "DEMO270617C00105000",
+  ];
+
+  detailedLabels.forEach((displaySymbol) => {
+    const unsafePosition = {
+      ...panel,
+      positions: panel.positions.map((position) =>
+        position.assetType === "option" ? { ...position, displaySymbol } : position,
+      ),
+    };
+    const unsafeTrade = {
+      ...panel,
+      weeklyTrades: panel.weeklyTrades.map((trade) =>
+        trade.assetType === "option" ? { ...trade, displaySymbol } : trade,
+      ),
+    };
+
+    assert.throws(() => assertPublicInvestmentPrivacy(unsafePosition));
+    assert.throws(() => PublicInvestmentPanelSchema.parse(unsafePosition));
+    assert.throws(() => assertPublicInvestmentPrivacy(unsafeTrade));
+    assert.throws(() => PublicInvestmentPanelSchema.parse(unsafeTrade));
+  });
+});
+
+test("rejects a stale top-level date that is not the latest section date", () => {
   const panel = buildPublicInvestmentPanel(validInvestmentSource());
   assert.throws(() =>
-    PublicInvestmentPanelSchema.parse({ ...panel, asOfDate: "2025-04-11" }),
+    PublicInvestmentPanelSchema.parse({ ...panel, asOfDate: "2026-09-01" }),
   );
 });

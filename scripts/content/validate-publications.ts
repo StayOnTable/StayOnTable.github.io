@@ -3,6 +3,14 @@ import { resolve } from "node:path";
 
 import { loadJourneyFeed } from "../../src/content/journey";
 import {
+  libraryRecords,
+  loadLibraryRecords,
+} from "../../src/app/library/library-records";
+import {
+  loadXiaohongshuPosts,
+  xiaohongshuPosts,
+} from "../../src/content/site";
+import {
   PublicationGateError,
   beijingDay,
   readPublicationRepositoryInputs,
@@ -30,9 +38,11 @@ async function main(): Promise<void> {
   const journeyPath = resolve(siteRoot, "src/content/journey-public.json");
   const journeyValue = JSON.parse(await readFile(journeyPath, "utf8")) as unknown;
   const journey = loadJourneyFeed(journeyValue, asOfDate);
+  const library = loadLibraryRecords(libraryRecords, asOfDate);
+  const xiaohongshu = loadXiaohongshuPosts(xiaohongshuPosts, asOfDate);
 
   process.stdout.write(
-    `Public content passed approval, schedule, hash, placeholder, and privacy gates (${manifest.publications.length} MDX pages; ${journey.entries.length} journey entries).\n`,
+    `Public content passed approval, schedule, hash, placeholder, and privacy gates (${manifest.publications.length} MDX pages; ${journey.entries.length} journey entries; ${library.length} library records; ${xiaohongshu.length} Xiaohongshu records).\n`,
   );
 }
 

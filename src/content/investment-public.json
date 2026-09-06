@@ -1,22 +1,358 @@
 {
-  "schemaVersion": "investment-public-v1",
-  "asOfDate": "2025-04-04",
-  "inceptionDate": "2025-04-01",
+  "schemaVersion": "investment-public-v3",
+  "publicationStatus": "published",
+  "source": "ibkr-readonly-plugin",
+  "currency": "USD",
+  "asOfDate": "2026-09-02",
   "disclaimer": "仅为个人投资复盘与记录，不构成任何投资建议。市场有风险，请独立判断。",
-  "grossSecuritiesMarketValueUsd": 0,
+  "dataDates": {
+    "positionsAsOf": "2026-09-02",
+    "tradesFrom": "2026-08-31",
+    "tradesThrough": "2026-09-02"
+  },
   "performance": {
-    "weeklyReturnPct": 0,
-    "ytdReturnPct": 0,
-    "sinceInceptionReturnPct": 0,
-    "maxDrawdownPct": 0,
+    "measure": "twr",
+    "coverageStartDate": "2026-04-10",
+    "coverageEndDate": "2026-09-02",
+    "weeklyReturnPct": -1.065956,
+    "monthlyReturnPct": null,
+    "quarterlyReturnPct": null,
     "weeklySeries": [
       {
-        "weekEnding": "2025-04-04",
-        "weeklyReturnPct": 0,
-        "portfolioIndex": 100
+        "weekEnding": "2026-04-10",
+        "weeklyReturnPct": 2.195341,
+        "portfolioIndex": 102.195341
+      },
+      {
+        "weekEnding": "2026-04-17",
+        "weeklyReturnPct": 4.77502,
+        "portfolioIndex": 107.075189
+      },
+      {
+        "weekEnding": "2026-04-24",
+        "weeklyReturnPct": -0.230801,
+        "portfolioIndex": 106.828058
+      },
+      {
+        "weekEnding": "2026-05-01",
+        "weeklyReturnPct": 3.389892,
+        "portfolioIndex": 110.449414
+      },
+      {
+        "weekEnding": "2026-05-08",
+        "weeklyReturnPct": 9.092094,
+        "portfolioIndex": 120.491579
+      },
+      {
+        "weekEnding": "2026-05-15",
+        "weeklyReturnPct": -2.514033,
+        "portfolioIndex": 117.462381
+      },
+      {
+        "weekEnding": "2026-05-22",
+        "weeklyReturnPct": 7.305372,
+        "portfolioIndex": 126.043445
+      },
+      {
+        "weekEnding": "2026-05-29",
+        "weeklyReturnPct": 9.525954,
+        "portfolioIndex": 138.050286
+      },
+      {
+        "weekEnding": "2026-06-05",
+        "weeklyReturnPct": -7.30976,
+        "portfolioIndex": 127.959141
+      },
+      {
+        "weekEnding": "2026-06-12",
+        "weeklyReturnPct": 2.023208,
+        "portfolioIndex": 130.548021
+      },
+      {
+        "weekEnding": "2026-06-19",
+        "weeklyReturnPct": 6.719927,
+        "portfolioIndex": 139.320753
+      },
+      {
+        "weekEnding": "2026-06-26",
+        "weeklyReturnPct": -9.262775,
+        "portfolioIndex": 126.415785
+      },
+      {
+        "weekEnding": "2026-07-03",
+        "weeklyReturnPct": -4.697168,
+        "portfolioIndex": 120.477823
+      },
+      {
+        "weekEnding": "2026-07-10",
+        "weeklyReturnPct": 3.67702,
+        "portfolioIndex": 124.907817
+      },
+      {
+        "weekEnding": "2026-07-17",
+        "weeklyReturnPct": -11.998119,
+        "portfolioIndex": 109.921228
+      },
+      {
+        "weekEnding": "2026-07-24",
+        "weeklyReturnPct": 2.002564,
+        "portfolioIndex": 112.122471
+      },
+      {
+        "weekEnding": "2026-07-31",
+        "weeklyReturnPct": -4.125959,
+        "portfolioIndex": 107.496344
+      },
+      {
+        "weekEnding": "2026-08-07",
+        "weeklyReturnPct": 9.761915,
+        "portfolioIndex": 117.990046
+      },
+      {
+        "weekEnding": "2026-08-14",
+        "weeklyReturnPct": 3.580021,
+        "portfolioIndex": 122.214114
+      },
+      {
+        "weekEnding": "2026-08-21",
+        "weeklyReturnPct": -4.920392,
+        "portfolioIndex": 116.200701
+      },
+      {
+        "weekEnding": "2026-08-28",
+        "weeklyReturnPct": -0.380016,
+        "portfolioIndex": 115.75912
+      },
+      {
+        "weekEnding": "2026-09-02",
+        "weeklyReturnPct": -1.065956,
+        "portfolioIndex": 114.525179
       }
     ]
   },
-  "positions": [],
-  "weeklyOptionTrades": []
+  "positions": [
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "MU",
+      "direction": "long",
+      "allocationPct": 12.787473
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "AVGO",
+      "direction": "long",
+      "allocationPct": 8.323724
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "QCOM",
+      "direction": "long",
+      "allocationPct": 7.623737
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "NVDA",
+      "direction": "long",
+      "allocationPct": 6.651547
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "AMD",
+      "direction": "long",
+      "allocationPct": 6.192109
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "META",
+      "direction": "long",
+      "allocationPct": 4.807292
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "MRVL",
+      "direction": "long",
+      "allocationPct": 4.644962
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "MSFT",
+      "direction": "long",
+      "allocationPct": 4.068612
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "TSM",
+      "direction": "long",
+      "allocationPct": 3.721014
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "DELL",
+      "direction": "long",
+      "allocationPct": 3.702906
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "WDC",
+      "direction": "long",
+      "allocationPct": 3.596003
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "AMKR",
+      "direction": "long",
+      "allocationPct": 3.164808
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "PLTR",
+      "direction": "long",
+      "allocationPct": 3.057828
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "TTMI",
+      "direction": "long",
+      "allocationPct": 2.833936
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "SNDK",
+      "direction": "long",
+      "allocationPct": 2.781878
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "PWR",
+      "direction": "long",
+      "allocationPct": 2.734568
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "TXN",
+      "direction": "long",
+      "allocationPct": 2.658939
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "ETN",
+      "direction": "long",
+      "allocationPct": 2.292585
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "SMSN @LSEIOB1",
+      "direction": "long",
+      "allocationPct": 2.088251
+    },
+    {
+      "assetType": "option",
+      "displaySymbol": "NOW",
+      "direction": "long",
+      "allocationPct": 2.058882
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "ALAB",
+      "direction": "long",
+      "allocationPct": 1.101814
+    },
+    {
+      "assetType": "option",
+      "displaySymbol": "QCOM",
+      "direction": "long",
+      "allocationPct": 1.042986
+    },
+    {
+      "assetType": "option",
+      "displaySymbol": "QCOM",
+      "direction": "short",
+      "allocationPct": 0.971663
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "IONQ",
+      "direction": "long",
+      "allocationPct": 0.958969
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "INTC",
+      "direction": "long",
+      "allocationPct": 0.730487
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "FCX",
+      "direction": "long",
+      "allocationPct": 0.684461
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "SPCX",
+      "direction": "long",
+      "allocationPct": 0.634493
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "WDCC",
+      "direction": "long",
+      "allocationPct": 0.575665
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "IBKR",
+      "direction": "long",
+      "allocationPct": 0.54858
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "NLR",
+      "direction": "long",
+      "allocationPct": 0.538107
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "SKHY",
+      "direction": "long",
+      "allocationPct": 0.512599
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "NASA",
+      "direction": "long",
+      "allocationPct": 0.510126
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "RMBS",
+      "direction": "long",
+      "allocationPct": 0.451343
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "GLW",
+      "direction": "long",
+      "allocationPct": 0.325048
+    },
+    {
+      "assetType": "option",
+      "displaySymbol": "MRVL",
+      "direction": "short",
+      "allocationPct": 0.266928
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "DRAM",
+      "direction": "long",
+      "allocationPct": 0.201186
+    },
+    {
+      "assetType": "stock-or-etf",
+      "displaySymbol": "MRAM",
+      "direction": "long",
+      "allocationPct": 0.154491
+    }
+  ],
+  "weeklyTrades": []
 }

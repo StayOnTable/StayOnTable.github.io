@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import {
   INVESTMENT_DISCLAIMER,
+  INVESTMENT_PUBLIC_CURRENCY,
+  INVESTMENT_PUBLIC_HISTORY_START_DATE,
   PUBLIC_INVESTMENT_SCHEMA_VERSION,
 } from "./constants";
 import { isIsoDate, roundNumber } from "./date";
@@ -11,30 +13,31 @@ export const IsoDateSchema = z
   .refine(isIsoDate, "Expected a real calendar date in YYYY-MM-DD format");
 
 const FiniteNumberSchema = z.number().finite();
-const NonNegativeFiniteNumberSchema = FiniteNumberSchema.nonnegative();
+const PositiveFiniteNumberSchema = FiniteNumberSchema.positive();
+export const PublicAssetTypeSchema = z.enum(["stock-or-etf", "option", "other"]);
+
 const AlwaysPrivatePositionLabelPattern =
   /(?:\b(?:MARGIN|BUYING\s*POWER|NET\s*(?:LIQUIDATION|ASSET\s*VALUE)|NLV|ACCOUNT\s*(?:VALUE|EQUITY)|LOAN|BORROW(?:ED|ING)?)\b|保证金|购买力|净清算|账户权益|借款|融资)/i;
 const CashLikePositionLabelPattern =
   /(?:\b(?:USD|BASE|CURRENCY|FX)?\s*CASH(?:\s*BALANCE)?\b|\b(?:USD|BASE)\s+CURRENCY\b|现金)/i;
+const OptionUnderlyingOnlyPattern = /^[a-z0-9][a-z0-9.\-/:]{0,23}$/i;
+const OptionContractDetailPattern = /\d{6}[cp]\d{8}/i;
 
-export const PublicOptionContractSchema = z
-  .object({
-    underlying: z.string().trim().min(1).max(32),
-    expiration: IsoDateSchema,
-    strike: NonNegativeFiniteNumberSchema,
-    right: z.enum(["call", "put"]),
-    openContracts: z.number().int().positive(),
-  })
-  .strict();
+/** Public option labels must be the underlying only, never a contract description. */
+export function isPublicOptionUnderlyingSymbol(value: string): boolean {
+  const symbol = value.trim();
+  return (
+    OptionUnderlyingOnlyPattern.test(symbol) &&
+    !OptionContractDetailPattern.test(symbol)
+  );
+}
 
 export const PublicPositionSchema = z
   .object({
-    assetType: z.enum(["stock", "etf", "option", "other"]),
-    displaySymbol: z.string().trim().min(1).max(80),
+    assetType: PublicAssetTypeSchema,
+    displaySymbol: z.string().trim().min(1).max(120),
     direction: z.enum(["long", "short"]),
-    marketValueAbsUsd: NonNegativeFiniteNumberSchema,
-    allocationPct: FiniteNumberSchema.min(0).max(100),
-    option: PublicOptionContractSchema.optional(),
+    allocationPct: PositiveFiniteNumberSchema.max(100),
   })
   .strict()
   .superRefine((position, context) => {
@@ -48,110 +51,116 @@ export const PublicPositionSchema = z
         message: "Public positions cannot represent cash, financing, margin, or account equity",
       });
     }
-
-    if (position.assetType === "option" && !position.option) {
+    if (
+      position.assetType === "option" &&
+      !isPublicOptionUnderlyingSymbol(position.displaySymbol)
+    ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["option"],
-        message: "Option positions must include public contract details",
-      });
-    }
-
-    if (position.assetType !== "option" && position.option) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["option"],
-        message: "Only option positions may include option contract details",
+        path: ["displaySymbol"],
+        message: "Public option labels must contain the underlying symbol only",
       });
     }
   });
 
-export const PublicWeeklyOptionTradeSchema = z
+export const PublicWeeklyTradeSchema = z
   .object({
-    weekEnding: IsoDateSchema,
-    underlying: z.string().trim().min(1).max(32),
-    expiration: IsoDateSchema,
-    strike: NonNegativeFiniteNumberSchema,
-    right: z.enum(["call", "put"]),
+    tradeDate: IsoDateSchema,
+    assetType: PublicAssetTypeSchema,
+    displaySymbol: z.string().trim().min(1).max(120),
     side: z.enum(["buy", "sell"]),
-    contracts: z.number().int().positive(),
-    averageFillPrice: NonNegativeFiniteNumberSchema,
+    amountAbsUsd: PositiveFiniteNumberSchema,
+    fillCount: z.number().int().positive(),
   })
-  .strict();
+  .strict()
+  .superRefine((trade, context) => {
+    if (
+      trade.assetType === "option" &&
+      !isPublicOptionUnderlyingSymbol(trade.displaySymbol)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["displaySymbol"],
+        message: "Public option labels must contain the underlying symbol only",
+      });
+    }
+  });
 
 export const PublicWeeklyPerformancePointSchema = z
   .object({
     weekEnding: IsoDateSchema,
     weeklyReturnPct: FiniteNumberSchema.min(-100),
-    portfolioIndex: FiniteNumberSchema.positive(),
+    portfolioIndex: PositiveFiniteNumberSchema,
   })
   .strict();
+
+const NullableReturnSchema = FiniteNumberSchema.min(-100).nullable();
 
 export const PublicInvestmentPanelSchema = z
   .object({
     schemaVersion: z.literal(PUBLIC_INVESTMENT_SCHEMA_VERSION),
+    publicationStatus: z.enum(["preview", "published"]),
+    source: z.literal("ibkr-readonly-plugin"),
+    currency: z.literal(INVESTMENT_PUBLIC_CURRENCY),
     asOfDate: IsoDateSchema,
-    inceptionDate: IsoDateSchema,
     disclaimer: z.literal(INVESTMENT_DISCLAIMER),
-    grossSecuritiesMarketValueUsd: NonNegativeFiniteNumberSchema,
+    dataDates: z
+      .object({
+        positionsAsOf: IsoDateSchema,
+        tradesFrom: IsoDateSchema,
+        tradesThrough: IsoDateSchema,
+      })
+      .strict(),
     performance: z
       .object({
+        measure: z.literal("twr"),
+        coverageStartDate: IsoDateSchema,
+        coverageEndDate: IsoDateSchema,
         weeklyReturnPct: FiniteNumberSchema.min(-100),
-        ytdReturnPct: FiniteNumberSchema.min(-100),
-        sinceInceptionReturnPct: FiniteNumberSchema.min(-100),
-        maxDrawdownPct: FiniteNumberSchema.min(-100).max(0),
+        monthlyReturnPct: NullableReturnSchema,
+        quarterlyReturnPct: NullableReturnSchema,
         weeklySeries: z.array(PublicWeeklyPerformancePointSchema).min(1),
       })
       .strict(),
     positions: z.array(PublicPositionSchema),
-    weeklyOptionTrades: z.array(PublicWeeklyOptionTradeSchema),
+    weeklyTrades: z.array(PublicWeeklyTradeSchema),
   })
   .strict()
   .superRefine((panel, context) => {
-    if (panel.inceptionDate > panel.asOfDate) {
+    if (panel.performance.coverageStartDate > panel.performance.coverageEndDate) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["inceptionDate"],
-        message: "Inception date must not be later than the as-of date",
+        path: ["performance", "coverageStartDate"],
+        message: "Performance coverage start must not be later than its end",
       });
     }
 
-    const grossFromPositions = roundNumber(
-      panel.positions.reduce((sum, position) => sum + position.marketValueAbsUsd, 0),
-      2,
-    );
-    if (Math.abs(grossFromPositions - panel.grossSecuritiesMarketValueUsd) > 0.01) {
+    if (panel.performance.coverageStartDate < INVESTMENT_PUBLIC_HISTORY_START_DATE) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["grossSecuritiesMarketValueUsd"],
-        message: "Gross securities value must equal the sum of absolute public position values",
+        path: ["performance", "coverageStartDate"],
+        message: `Public performance history must not begin before ${INVESTMENT_PUBLIC_HISTORY_START_DATE}`,
       });
     }
 
-    const allocationTotal = panel.positions.reduce(
-      (sum, position) => sum + position.allocationPct,
-      0,
-    );
-    const expectedAllocationTotal = panel.grossSecuritiesMarketValueUsd > 0 ? 100 : 0;
-    if (Math.abs(allocationTotal - expectedAllocationTotal) > 0.001) {
+    if (panel.dataDates.tradesFrom > panel.dataDates.tradesThrough) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["positions"],
-        message: `Public allocations must sum to ${expectedAllocationTotal}`,
+        path: ["dataDates", "tradesFrom"],
+        message: "Trade coverage start must not be later than its end",
       });
     }
 
-    if (panel.grossSecuritiesMarketValueUsd > 0) {
-      panel.positions.forEach((position, index) => {
-        const expectedAllocation =
-          (position.marketValueAbsUsd / panel.grossSecuritiesMarketValueUsd) * 100;
-        if (Math.abs(position.allocationPct - expectedAllocation) > 0.001) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["positions", index, "allocationPct"],
-            message: "Allocation must be normalized from public absolute market values",
-          });
-        }
+    const latestSectionDate = [
+      panel.performance.coverageEndDate,
+      panel.dataDates.positionsAsOf,
+      panel.dataDates.tradesThrough,
+    ].sort().at(-1);
+    if (latestSectionDate !== panel.asOfDate) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["asOfDate"],
+        message: "As-of date must equal the latest section data date",
       });
     }
 
@@ -165,11 +174,14 @@ export const PublicInvestmentPanelSchema = z
           message: "Weekly performance dates must be unique and strictly increasing",
         });
       }
-      if (point.weekEnding > panel.asOfDate) {
+      if (
+        point.weekEnding < panel.performance.coverageStartDate ||
+        point.weekEnding > panel.performance.coverageEndDate
+      ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["performance", "weeklySeries", index, "weekEnding"],
-          message: "Weekly performance cannot be later than the as-of date",
+          message: "Weekly performance must stay inside the declared coverage",
         });
       }
 
@@ -186,55 +198,72 @@ export const PublicInvestmentPanelSchema = z
 
     const finalPoint = panel.performance.weeklySeries.at(-1);
     if (finalPoint) {
-      if (finalPoint.weekEnding !== panel.asOfDate) {
+      if (finalPoint.weekEnding !== panel.performance.coverageEndDate) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["performance", "weeklySeries"],
-          message: "The latest weekly performance date must equal the public as-of date",
+          message: "The latest weekly performance date must equal the coverage end date",
         });
       }
-
-      if (
-        Math.abs(finalPoint.weeklyReturnPct - panel.performance.weeklyReturnPct) > 0.000001
-      ) {
+      if (Math.abs(finalPoint.weeklyReturnPct - panel.performance.weeklyReturnPct) > 0.000001) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["performance", "weeklyReturnPct"],
           message: "Headline weekly return must equal the latest weekly-series return",
         });
       }
-
     }
 
-    const optionTradeKeys = new Set<string>();
-    panel.weeklyOptionTrades.forEach((trade, index) => {
-      const aggregateKey = JSON.stringify([
-        trade.weekEnding,
-        trade.underlying,
-        trade.expiration,
-        trade.strike,
-        trade.right,
-        trade.side,
-      ]);
-      if (optionTradeKeys.has(aggregateKey)) {
+    const positionKeys = new Set<string>();
+    panel.positions.forEach((position, index) => {
+      const key = [position.assetType, position.displaySymbol, position.direction].join("|");
+      if (positionKeys.has(key)) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ["weeklyOptionTrades", index],
-          message: "Weekly option trades must be unique by the full public aggregate key",
+          path: ["positions", index],
+          message: "Public positions must be unique by their full public identity",
         });
       }
-      optionTradeKeys.add(aggregateKey);
+      positionKeys.add(key);
+    });
+    if (panel.positions.length > 0) {
+      const allocationTotal = panel.positions.reduce(
+        (sum, position) => sum + position.allocationPct,
+        0,
+      );
+      if (Math.abs(allocationTotal - 100) > 0.001) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["positions"],
+          message: "Public USD position allocations must sum to 100",
+        });
+      }
+    }
 
-      if (trade.weekEnding !== panel.asOfDate) {
+    const tradeKeys = new Set<string>();
+    panel.weeklyTrades.forEach((trade, index) => {
+      if (
+        trade.tradeDate < panel.dataDates.tradesFrom ||
+        trade.tradeDate > panel.dataDates.tradesThrough
+      ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ["weeklyOptionTrades", index, "weekEnding"],
-          message: "Published option trades must belong to the current as-of week",
+          path: ["weeklyTrades", index, "tradeDate"],
+          message: "Published trades must stay inside the declared trade window",
         });
       }
+      const key = [trade.tradeDate, trade.assetType, trade.displaySymbol, trade.side].join("|");
+      if (tradeKeys.has(key)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["weeklyTrades", index],
+          message: "Weekly trades must be unique by the full public aggregate key",
+        });
+      }
+      tradeKeys.add(key);
     });
   });
 
 export type PublicInvestmentPanel = z.infer<typeof PublicInvestmentPanelSchema>;
 export type PublicPosition = z.infer<typeof PublicPositionSchema>;
-export type PublicWeeklyOptionTrade = z.infer<typeof PublicWeeklyOptionTradeSchema>;
+export type PublicWeeklyTrade = z.infer<typeof PublicWeeklyTradeSchema>;

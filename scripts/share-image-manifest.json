@@ -1,7 +1,9 @@
 {
   "file": "og.png",
-  "sha256": "8d9f96fb10fc048eec46b125210f06cfd429a85c8153790cc0cccc21a96642db",
+  "sha256": "49ce1bd910ec39b3773064b20770c3a2c4f73908fa8d133c56165434a95e7bdc",
   "width": 1536,
   "height": 1024,
-  "visibleDisclaimer": "仅个人复盘，非投资建议"
+  "kind": "site-cover",
+  "containsInvestmentData": false,
+  "visibleDisclaimer": null
 }

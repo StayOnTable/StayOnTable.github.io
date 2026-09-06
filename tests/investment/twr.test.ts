@@ -4,145 +4,156 @@ import test from "node:test";
 import {
   InvestmentDataQualityError,
   buildPublicPerformance,
-  calculateFlowAdjustedReturnPct,
   compoundReturnPct,
-  normalizeDailyTwrChunks,
+  normalizeDailyTwrPoints,
 } from "../../src/lib/investment";
 
-test("removes external deposits and withdrawals from adapter-side return", () => {
+test("compounds plugin TWR percentages without dollar account values", () => {
   assert.equal(
-    calculateFlowAdjustedReturnPct({
-      openingValueUsd: 100000,
-      closingValueUsd: 152000,
-      netExternalFlowUsd: 50000,
-      flowTiming: "end",
-    }),
-    2,
-  );
-  assert.equal(
-    calculateFlowAdjustedReturnPct({
-      openingValueUsd: 100000,
-      closingValueUsd: 82000,
-      netExternalFlowUsd: -20000,
-      flowTiming: "end",
-    }),
-    2,
-  );
-  assert.equal(
-    calculateFlowAdjustedReturnPct({
-      openingValueUsd: 100000,
-      closingValueUsd: 153000,
-      netExternalFlowUsd: 50000,
-      flowTiming: "start",
-    }),
-    2,
+    compoundReturnPct([
+      { date: "2026-08-31", returnPct: 10 },
+      { date: "2026-09-01", returnPct: -10 },
+    ]),
+    -1,
   );
 });
 
-test("compounds returns across overlapping Flex chunks without double counting", () => {
-  const normalized = normalizeDailyTwrChunks(
+test("de-duplicates identical plugin dates and fails on conflicting values", () => {
+  assert.deepEqual(
+    normalizeDailyTwrPoints([
+      { date: "2026-09-02", returnPct: 0.5 },
+      { date: "2026-09-01", returnPct: 0.25 },
+      { date: "2026-09-02", returnPct: 0.5 },
+    ]),
     [
-      [
-        { date: "2025-04-01", returnPct: 10 },
-        { date: "2025-04-02", returnPct: 0 },
-      ],
-      [
-        { date: "2025-04-02", returnPct: 0 },
-        { date: "2025-04-03", returnPct: -10 },
-      ],
+      { date: "2026-09-01", returnPct: 0.25 },
+      { date: "2026-09-02", returnPct: 0.5 },
     ],
-    ["2025-04-01", "2025-04-02", "2025-04-03"],
   );
 
-  assert.equal(normalized.length, 3);
-  assert.equal(compoundReturnPct(normalized), -1);
-});
-
-test("fails closed when overlapping chunks disagree", () => {
   assert.throws(
     () =>
-      normalizeDailyTwrChunks(
-        [
-          [{ date: "2025-04-01", returnPct: 1 }],
-          [{ date: "2025-04-01", returnPct: 2 }],
-        ],
-        ["2025-04-01"],
-      ),
+      normalizeDailyTwrPoints([
+        { date: "2026-09-02", returnPct: 0.5 },
+        { date: "2026-09-02", returnPct: 0.75 },
+      ]),
     (error: unknown) =>
       error instanceof InvestmentDataQualityError &&
       error.code === "DUPLICATE_TWR_CONFLICT",
   );
 });
 
-test("detects an expected trading-day gap but does not invent weekend gaps", () => {
+test("publishes only weekly, current-month, and current-quarter TWR", () => {
+  const performance = buildPublicPerformance(
+    [
+      { date: "2026-03-31", returnPct: 50 },
+      { date: "2026-04-01", returnPct: 1 },
+      { date: "2026-04-03", returnPct: -0.5 },
+      { date: "2026-07-01", returnPct: 2 },
+      { date: "2026-08-31", returnPct: -1 },
+      { date: "2026-09-01", returnPct: 0.5 },
+      { date: "2026-09-02", returnPct: 1 },
+    ],
+    "2026-03-31",
+    "2026-09-02",
+  );
+
+  assert.equal(performance.measure, "twr");
+  assert.equal(performance.coverageStartDate, "2026-04-01");
+  assert.equal(performance.coverageEndDate, "2026-09-02");
+  assert.deepEqual(performance.weeklySeries, [
+    { weekEnding: "2026-04-03", weeklyReturnPct: 0.495, portfolioIndex: 100.495 },
+    { weekEnding: "2026-07-01", weeklyReturnPct: 2, portfolioIndex: 102.5049 },
+    { weekEnding: "2026-09-02", weeklyReturnPct: 0.48995, portfolioIndex: 103.007123 },
+  ]);
+  assert.equal(performance.weeklyReturnPct, 0.48995);
+  assert.equal(performance.monthlyReturnPct, 1.505);
+  assert.equal(performance.quarterlyReturnPct, 2.499749);
+  assert.deepEqual(Object.keys(performance).sort(), [
+    "coverageEndDate",
+    "coverageStartDate",
+    "measure",
+    "monthlyReturnPct",
+    "quarterlyReturnPct",
+    "weeklyReturnPct",
+    "weeklySeries",
+  ]);
+});
+
+test("clips public history at April 1 without applying older returns", () => {
+  const performance = buildPublicPerformance(
+    [
+      { date: "2025-09-02", returnPct: 900 },
+      { date: "2026-04-06", returnPct: 1 },
+      { date: "2026-09-02", returnPct: 2 },
+    ],
+    "2025-09-02",
+    "2026-09-02",
+  );
+
+  assert.equal(performance.coverageStartDate, "2026-04-06");
+  assert.equal(performance.weeklySeries[0]?.portfolioIndex, 101);
+  assert.equal(performance.weeklySeries.at(-1)?.portfolioIndex, 103.02);
+});
+
+test("keeps 2026-04-01 as the fixed history anchor in later years", () => {
+  const performance = buildPublicPerformance(
+    [
+      { date: "2026-04-01", returnPct: 1 },
+      { date: "2027-01-04", returnPct: 2 },
+      { date: "2027-05-03", returnPct: 3 },
+    ],
+    "2026-04-01",
+    "2027-05-03",
+  );
+
+  assert.equal(performance.coverageStartDate, "2026-04-01");
+  assert.equal(performance.weeklySeries[0]?.weekEnding, "2026-04-01");
+});
+
+test("uses null instead of inventing incomplete month or quarter returns", () => {
+  const performance = buildPublicPerformance(
+    [
+      { date: "2026-08-31", returnPct: 1 },
+      { date: "2026-09-02", returnPct: -0.5 },
+    ],
+    "2026-08-31",
+    "2026-09-02",
+  );
+
+  assert.equal(performance.monthlyReturnPct, -0.5);
+  assert.equal(performance.quarterlyReturnPct, null);
+});
+
+test("fails closed when declared plugin coverage does not match the TWR endpoints", () => {
   assert.throws(
     () =>
-      normalizeDailyTwrChunks(
+      buildPublicPerformance(
         [
-          [
-            { date: "2025-04-04", returnPct: 0.5 },
-            { date: "2025-04-08", returnPct: 0.25 },
-          ],
+          { date: "2026-09-01", returnPct: 0.25 },
+          { date: "2026-09-02", returnPct: 0.5 },
         ],
-        ["2025-04-04", "2025-04-07", "2025-04-08"],
+        "2026-08-31",
+        "2026-09-02",
       ),
     (error: unknown) =>
       error instanceof InvestmentDataQualityError &&
-      error.code === "MISSING_TRADING_DATES",
-  );
-
-  assert.doesNotThrow(() =>
-    normalizeDailyTwrChunks(
-      [
-        [
-          { date: "2025-04-04", returnPct: 0.5 },
-          { date: "2025-04-07", returnPct: 0.25 },
-        ],
-      ],
-      ["2025-04-04", "2025-04-07"],
-    ),
+      error.code === "TWR_COVERAGE_MISMATCH",
   );
 });
 
-test("builds Friday-labelled weekly series and whole-account drawdown", () => {
+test("does not synthesize a zero-return row for a market-closed week", () => {
   const performance = buildPublicPerformance(
     [
-      { date: "2025-03-31", returnPct: 10 },
-      { date: "2025-04-01", returnPct: -5 },
-      { date: "2025-04-04", returnPct: 2 },
-      { date: "2025-04-07", returnPct: 1 },
-      { date: "2025-04-11", returnPct: -1 },
+      { date: "2026-08-21", returnPct: 0 },
+      { date: "2026-09-01", returnPct: 1 },
     ],
-    "2025-04-11",
+    "2026-08-21",
+    "2026-09-01",
   );
-
-  assert.deepEqual(
-    performance.weeklySeries.map((point) => point.weekEnding),
-    ["2025-04-04", "2025-04-11"],
-  );
-  assert.equal(performance.weeklySeries[1].weeklyReturnPct, -0.01);
-  assert.equal(performance.maxDrawdownPct, -5);
-  assert.equal(performance.ytdReturnPct, 6.579341);
-});
-
-test("does not synthesize a zero-return row for a fully closed market week", () => {
-  const normalized = normalizeDailyTwrChunks(
-    [
-      [
-        { date: "2025-04-04", returnPct: 0 },
-        { date: "2025-04-14", returnPct: 1 },
-      ],
-    ],
-    ["2025-04-04", "2025-04-14"],
-  );
-  const performance = buildPublicPerformance(normalized, "2025-04-14", "2025-04-04");
 
   assert.deepEqual(performance.weeklySeries, [
-    { weekEnding: "2025-04-04", weeklyReturnPct: 0, portfolioIndex: 100 },
-    { weekEnding: "2025-04-14", weeklyReturnPct: 1, portfolioIndex: 101 },
+    { weekEnding: "2026-08-21", weeklyReturnPct: 0, portfolioIndex: 100 },
+    { weekEnding: "2026-09-01", weeklyReturnPct: 1, portfolioIndex: 101 },
   ]);
-  assert.equal(
-    performance.weeklySeries.some((point) => point.weekEnding === "2025-04-11"),
-    false,
-  );
 });

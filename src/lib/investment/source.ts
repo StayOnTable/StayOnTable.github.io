@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import { INVESTMENT_SOURCE_SCHEMA_VERSION } from "./constants";
-import { IsoDateSchema } from "./schema";
+import {
+  IsoDateSchema,
+  PublicAssetTypeSchema,
+  isPublicOptionUnderlyingSymbol,
+} from "./schema";
 
 const FiniteNumberSchema = z.number().finite();
 
@@ -12,97 +16,108 @@ export const DailyTwrPointSchema = z
   })
   .strict();
 
-export const InvestmentSourceOptionContractSchema = z
-  .object({
-    underlying: z.string().trim().min(1).max(32),
-    expiration: IsoDateSchema,
-    strike: FiniteNumberSchema.nonnegative(),
-    right: z.enum(["call", "put"]),
-    openContracts: z.number().int().positive(),
-  })
-  .strict();
-
 export const InvestmentSourcePositionSchema = z
   .object({
-    assetType: z.enum(["stock", "etf", "option", "other"]),
-    displaySymbol: z.string().trim().min(1).max(80),
+    assetType: PublicAssetTypeSchema,
+    displaySymbol: z.string().trim().min(1).max(120),
     direction: z.enum(["long", "short"]),
-    marketValueUsd: FiniteNumberSchema,
-    option: InvestmentSourceOptionContractSchema.optional(),
+    marketValue: z
+      .object({
+        currency: z.literal("USD"),
+        signedAmount: FiniteNumberSchema,
+      })
+      .strict(),
   })
   .strict()
   .superRefine((position, context) => {
-    if (position.marketValueUsd > 0 && position.direction !== "long") {
+    if (position.marketValue.signedAmount > 0 && position.direction !== "long") {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["direction"],
         message: "Positive market value must be normalized as a long position",
       });
     }
-
-    if (position.marketValueUsd < 0 && position.direction !== "short") {
+    if (position.marketValue.signedAmount < 0 && position.direction !== "short") {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["direction"],
         message: "Negative market value must be normalized as a short position",
       });
     }
-
-    if (position.assetType === "option" && !position.option) {
+    if (
+      position.assetType === "option" &&
+      !isPublicOptionUnderlyingSymbol(position.displaySymbol)
+    ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["option"],
-        message: "Normalized option positions require contract details",
-      });
-    }
-
-    if (position.assetType !== "option" && position.option) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["option"],
-        message: "Non-option positions cannot carry option contract details",
+        path: ["displaySymbol"],
+        message: "The private adapter must reduce option labels to the underlying symbol",
       });
     }
   });
 
-export const InvestmentSourceOptionTradeSchema = z
+/**
+ * A sanitized fill emitted by the private plugin adapter. The adapter must
+ * deduplicate private execution/order identifiers before creating this value.
+ * `amountAbsUsd` is the absolute executed cash consideration for one fill. For
+ * options, the private adapter must apply the contract multiplier before this
+ * sanitized source crosses the projection boundary. Quantity is never copied
+ * into this value.
+ */
+export const InvestmentSourceTradeFillSchema = z
   .object({
     tradeDate: IsoDateSchema,
-    underlying: z.string().trim().min(1).max(32),
-    expiration: IsoDateSchema,
-    strike: FiniteNumberSchema.nonnegative(),
-    right: z.enum(["call", "put"]),
+    assetType: PublicAssetTypeSchema,
+    displaySymbol: z.string().trim().min(1).max(120),
     side: z.enum(["buy", "sell"]),
-    contracts: z.number().int().positive(),
-    fillPrice: FiniteNumberSchema.nonnegative(),
+    currency: z.literal("USD"),
+    amountAbsUsd: FiniteNumberSchema.positive(),
   })
-  .strict();
+  .strict()
+  .superRefine((fill, context) => {
+    if (
+      fill.assetType === "option" &&
+      !isPublicOptionUnderlyingSymbol(fill.displaySymbol)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["displaySymbol"],
+        message: "The private adapter must reduce option labels to the underlying symbol",
+      });
+    }
+  });
 
 export const InvestmentSourceSnapshotSchema = z
   .object({
     schemaVersion: z.literal(INVESTMENT_SOURCE_SCHEMA_VERSION),
+    publicationStatus: z.enum(["preview", "published"]),
+    source: z.literal("ibkr-readonly-plugin"),
     asOfDate: IsoDateSchema,
-    inceptionDate: IsoDateSchema,
-    chartStartDate: IsoDateSchema.optional(),
-    expectedTradingDates: z.array(IsoDateSchema).min(1),
-    dailyTwrChunks: z.array(z.array(DailyTwrPointSchema).min(1)).min(1),
+    dataDates: z
+      .object({
+        positionsAsOf: IsoDateSchema,
+        tradesFrom: IsoDateSchema,
+        tradesThrough: IsoDateSchema,
+      })
+      .strict(),
+    performance: z
+      .object({
+        coverageStartDate: IsoDateSchema,
+        coverageEndDate: IsoDateSchema,
+        dailyTwr: z.array(DailyTwrPointSchema).min(1),
+      })
+      .strict(),
     positions: z.array(InvestmentSourcePositionSchema),
-    optionTrades: z.array(InvestmentSourceOptionTradeSchema),
+    tradeFills: z.array(InvestmentSourceTradeFillSchema),
   })
   .strict();
 
 export type DailyTwrPoint = z.infer<typeof DailyTwrPointSchema>;
 export type InvestmentSourcePosition = z.infer<typeof InvestmentSourcePositionSchema>;
-export type InvestmentSourceOptionTrade = z.infer<typeof InvestmentSourceOptionTradeSchema>;
+export type InvestmentSourceTradeFill = z.infer<typeof InvestmentSourceTradeFillSchema>;
 export type InvestmentSourceSnapshot = z.infer<typeof InvestmentSourceSnapshotSchema>;
 
-/**
- * Boundary implemented by the private IB Gateway/Flex integration.
- *
- * The adapter must map raw private data into the strict normalized source schema.
- * It intentionally has no order methods and carries no account IDs, cash, margin,
- * credentials, raw payloads, share quantities, or stock cost basis.
- */
+/** Read-only boundary implemented by the private IBKR plugin adapter. */
 export interface PrivateInvestmentSourceAdapter {
   loadPublicProjectionSource(): Promise<unknown>;
 }

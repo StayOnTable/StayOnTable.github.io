@@ -15,6 +15,11 @@ type MutableManifest = {
   publications: Array<Record<string, unknown>>;
 };
 
+const SYNTHETIC_PRIVATE_EMAIL = ["example", "example.com"].join("@");
+const SYNTHETIC_OTHER_EMAIL = ["another.person", "fudan.edu.cn"].join("@");
+const SYNTHETIC_PHONE = ["138", "0013", "8000"].join("");
+const SYNTHETIC_LOCAL_PATH = ["/", "Users", "/example/private.json"].join("");
+
 function cloneManifest(): MutableManifest {
   return structuredClone(manifestJson) as MutableManifest;
 }
@@ -148,9 +153,9 @@ test("placeholder content is still scanned for private fields and credentials", 
   const source = [
     "<ContentNotice>这是占位示例。</ContentNotice>",
     "eventAt: 2026-08-20",
-    "联系 example@example.com 或 13800138000",
+    `联系 ${SYNTHETIC_PRIVATE_EMAIL} 或 ${SYNTHETIC_PHONE}`,
     "api_key=do-not-publish",
-    "/Users/example/private.json",
+    SYNTHETIC_LOCAL_PATH,
   ].join("\n");
   const input = onePage(source, {
     publicationStatus: "placeholder",
@@ -169,5 +174,16 @@ test("placeholder content is still scanned for private fields and credentials", 
   expectGateFailure(
     () => validatePublicationGate(input, "2026-09-01"),
     "credential assignment",
+  );
+});
+
+test("only the explicitly authorized public email passes the content gate", () => {
+  const authorized = "<p>联系我：zdliu20@fudan.edu.cn</p>";
+  validatePublicationGate(onePage(authorized), "2026-09-01");
+
+  const privateAddress = `<p>联系我：${SYNTHETIC_OTHER_EMAIL}</p>`;
+  expectGateFailure(
+    () => validatePublicationGate(onePage(privateAddress), "2026-09-01"),
+    "email address",
   );
 });

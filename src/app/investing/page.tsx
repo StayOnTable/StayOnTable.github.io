@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { ShieldCheck } from "lucide-react";
 import { InvestmentDashboard } from "@/components/investment-dashboard";
 import { InvestmentDisclaimer } from "@/components/investment-disclaimer";
-import { PageIntro } from "@/components/ui";
+import { InvestmentReflectionsPanel } from "@/components/investment-reflections-panel";
 import investmentJson from "@/content/investment-public.json";
 import { PublicInvestmentPanelSchema } from "@/lib/investment";
+import { investmentReflections } from "./investment-reflections";
 
 export const metadata: Metadata = {
   title: "投资复盘",
@@ -16,12 +17,18 @@ const investmentPanel = PublicInvestmentPanelSchema.parse(investmentJson);
 export default function InvestingPage() {
   return (
     <div className="shell page-shell investing-page">
-      <PageIntro
-        eyebrow="INVESTING / 投资复盘"
-        title="把每一次操作，放回长期曲线里看"
-        description="公开记录账户表现、持仓变化与判断修正。这里不展示融资、现金、账户权益或原始流水，也不把结果包装成可复制的答案。"
-        aside={<div className="read-only-chip"><ShieldCheck size={18} /><span>IBKR READ-ONLY</span><strong>只读 · 脱敏发布</strong></div>}
-      />
+      <section className="investing-intro" aria-labelledby="investing-title">
+        <div className="investing-intro__copy">
+          <span>INVESTING / 投资复盘</span>
+          <h1 id="investing-title">记录我的美股投资历程</h1>
+          <p>这里是一个程序员，在接触美股的过程中增进了对行业和世界的跟进和认知。</p>
+          <div className="investing-intro__meta" aria-label="投资数据说明">
+            <span>USD</span>
+            <span><ShieldCheck aria-hidden="true" size={13} />IBKR READ-ONLY</span>
+          </div>
+        </div>
+        <InvestmentReflectionsPanel reflections={investmentReflections} />
+      </section>
       <div className="investing-page__disclaimer"><InvestmentDisclaimer /></div>
       <InvestmentDashboard panel={investmentPanel} />
     </div>

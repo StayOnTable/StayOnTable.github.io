@@ -7,17 +7,22 @@ import {
 } from "../../src/lib/investment";
 
 async function main(): Promise<void> {
-  const [inputArgument] = process.argv.slice(2);
+  const arguments_ = process.argv.slice(2);
+  const requirePublished = arguments_.includes("--require-published");
+  const inputArgument = arguments_.find((argument) => !argument.startsWith("--"));
   if (!inputArgument) {
     throw new Error(
-      "Usage: tsx scripts/investment/validate-public-panel.ts <public-investment.json>",
+      "Usage: tsx scripts/investment/validate-public-panel.ts <public-investment.json> [--require-published]",
     );
   }
 
   const inputPath = resolve(inputArgument);
   const raw = JSON.parse(await readFile(inputPath, "utf8")) as unknown;
   assertPublicInvestmentPrivacy(raw);
-  PublicInvestmentPanelSchema.parse(raw);
+  const panel = PublicInvestmentPanelSchema.parse(raw);
+  if (requirePublished && panel.publicationStatus !== "published") {
+    throw new Error("Public investment release requires publicationStatus=published");
+  }
   process.stdout.write(`Public investment data passed schema and privacy checks: ${inputPath}\n`);
 }
 

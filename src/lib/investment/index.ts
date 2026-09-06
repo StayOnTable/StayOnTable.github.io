@@ -1,14 +1,11 @@
 export {
   INVESTMENT_DISCLAIMER,
+  INVESTMENT_PUBLIC_CURRENCY,
+  INVESTMENT_PUBLIC_HISTORY_START_DATE,
   INVESTMENT_SHORT_DISCLAIMER,
   INVESTMENT_SOURCE_SCHEMA_VERSION,
   PUBLIC_INVESTMENT_SCHEMA_VERSION,
 } from "./constants";
-export {
-  calculateFlowAdjustedReturnPct,
-  type ExternalFlowTiming,
-  type FlowAdjustedReturnInput,
-} from "./fund-flow";
 export {
   InvestmentPrivacyError,
   assertPublicInvestmentPrivacy,
@@ -17,36 +14,35 @@ export {
   type InvestmentPrivacyViolationCode,
 } from "./privacy";
 export {
-  aggregateWeeklyOptionTrades,
+  aggregateWeeklyTrades,
   buildPublicInvestmentPanel,
   buildPublicInvestmentPanelFromAdapter,
 } from "./projection";
 export {
+  PublicAssetTypeSchema,
   PublicInvestmentPanelSchema,
-  PublicOptionContractSchema,
   PublicPositionSchema,
-  PublicWeeklyOptionTradeSchema,
+  PublicWeeklyTradeSchema,
   PublicWeeklyPerformancePointSchema,
   type PublicInvestmentPanel,
   type PublicPosition,
-  type PublicWeeklyOptionTrade,
+  type PublicWeeklyTrade,
 } from "./schema";
 export {
   DailyTwrPointSchema,
-  InvestmentSourceOptionContractSchema,
-  InvestmentSourceOptionTradeSchema,
   InvestmentSourcePositionSchema,
   InvestmentSourceSnapshotSchema,
+  InvestmentSourceTradeFillSchema,
   type DailyTwrPoint,
-  type InvestmentSourceOptionTrade,
   type InvestmentSourcePosition,
   type InvestmentSourceSnapshot,
+  type InvestmentSourceTradeFill,
   type PrivateInvestmentSourceAdapter,
 } from "./source";
 export {
   InvestmentDataQualityError,
   buildPublicPerformance,
   compoundReturnPct,
-  normalizeDailyTwrChunks,
+  normalizeDailyTwrPoints,
   type InvestmentDataQualityCode,
 } from "./twr";

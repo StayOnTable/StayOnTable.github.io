@@ -3,5 +3,8 @@ export const INVESTMENT_DISCLAIMER =
 
 export const INVESTMENT_SHORT_DISCLAIMER = "仅个人复盘，非投资建议。" as const;
 
-export const PUBLIC_INVESTMENT_SCHEMA_VERSION = "investment-public-v1" as const;
-export const INVESTMENT_SOURCE_SCHEMA_VERSION = "investment-source-v1" as const;
+export const PUBLIC_INVESTMENT_SCHEMA_VERSION = "investment-public-v3" as const;
+export const INVESTMENT_SOURCE_SCHEMA_VERSION = "investment-plugin-source-v3" as const;
+
+export const INVESTMENT_PUBLIC_CURRENCY = "USD" as const;
+export const INVESTMENT_PUBLIC_HISTORY_START_DATE = "2026-04-01" as const;

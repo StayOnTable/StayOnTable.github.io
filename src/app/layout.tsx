@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         url: shareImageUrl,
         width: 1536,
         height: 1024,
-        alt: "在场笔记：写作、项目、求职、每日输入与投资复盘",
+        alt: "Stay on table：JoJo Liu 的写作、项目、求职、每日输入与投资复盘。",
       },
     ],
   },

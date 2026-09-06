@@ -13,6 +13,7 @@ export default function ProjectsPage() {
   return (
     <div className="shell page-shell">
       <PageIntro
+        compact
         eyebrow="PROJECTS / 项目"
         title="让想法留下可操作的形状"
         description="这里不会只放一张最终截图。每个项目都会尽量展示它解决的问题、关键取舍、当前状态，以及可以亲手体验的部分。"

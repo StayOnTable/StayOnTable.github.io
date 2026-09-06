@@ -15,14 +15,16 @@ export function PageIntro({
   title,
   description,
   aside,
+  compact = false,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   aside?: ReactNode;
+  compact?: boolean;
 }) {
   return (
-    <section className="page-intro">
+    <section className={`page-intro${compact ? " page-intro--compact" : ""}`}>
       <div className="page-intro__copy">
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1>{title}</h1>

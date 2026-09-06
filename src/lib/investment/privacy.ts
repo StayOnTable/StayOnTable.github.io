@@ -1,6 +1,7 @@
 export type InvestmentPrivacyViolationCode =
   | "FORBIDDEN_KEY"
   | "PRIVATE_POSITION_LABEL"
+  | "OPTION_CONTRACT_DETAIL"
   | "ACCOUNT_IDENTIFIER"
   | "CREDENTIAL_VALUE"
   | "CONNECTION_DETAIL";
@@ -43,12 +44,27 @@ const FORBIDDEN_EXACT_KEYS = new Set([
   "shares",
   "sharecount",
   "positionquantity",
+  "marketvalue",
+  "grosssecuritiesmarketvalue",
+  "valuation",
+  "amountabs",
   "cost",
   "costbasis",
   "averagecost",
   "avgcost",
+  "averagefillprice",
+  "fillprice",
+  "fillweight",
+  "opencontracts",
   "raw",
   "rawpayload",
+  "commission",
+  "commissions",
+  "fee",
+  "fees",
+  "datetime",
+  "tradetime",
+  "executiontime",
 ]);
 
 const FORBIDDEN_KEY_FRAGMENTS = [
@@ -89,6 +105,12 @@ const FORBIDDEN_KEY_FRAGMENTS = [
   "synclog",
   "internalid",
   "timestamp",
+  "datetime",
+  "tradetime",
+  "executiontime",
+  "commission",
+  "brokerfee",
+  "transactionfee",
   "pnl",
   "profitusd",
   "lossusd",
@@ -136,6 +158,8 @@ const ALWAYS_PRIVATE_POSITION_LABEL =
   /(?:\b(?:MARGIN|BUYING\s*POWER|NET\s*(?:LIQUIDATION|ASSET\s*VALUE)|NLV|ACCOUNT\s*(?:VALUE|EQUITY)|LOAN|BORROW(?:ED|ING)?)\b|保证金|购买力|净清算|账户权益|借款|融资)/i;
 const CASH_LIKE_POSITION_LABEL =
   /(?:\b(?:USD|BASE|CURRENCY|FX)?\s*CASH(?:\s*BALANCE)?\b|\b(?:USD|BASE)\s+CURRENCY\b|现金)/i;
+const OPTION_UNDERLYING_ONLY = /^[a-z0-9][a-z0-9.\-/:]{0,23}$/i;
+const OPTION_CONTRACT_DETAIL = /\d{6}[cp]\d{8}/i;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -193,6 +217,17 @@ export function scanPublicInvestmentPayload(value: unknown): InvestmentPrivacyVi
           code: "PRIVATE_POSITION_LABEL",
           path: childPath(path, "displaySymbol"),
           reason: "Position label can represent cash, financing, margin, or account equity",
+        });
+      }
+      if (
+        record.assetType === "option" &&
+        (!OPTION_UNDERLYING_ONLY.test(record.displaySymbol.trim()) ||
+          OPTION_CONTRACT_DETAIL.test(record.displaySymbol.trim()))
+      ) {
+        violations.push({
+          code: "OPTION_CONTRACT_DETAIL",
+          path: childPath(path, "displaySymbol"),
+          reason: "Option labels must expose the underlying symbol only",
         });
       }
     }

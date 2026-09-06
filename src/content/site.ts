@@ -1,7 +1,17 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 
-const hrefSchema = z.string().startsWith("/");
-const externalUrlSchema = z.string().url().nullable();
+const SHA256_PATTERN = /^[a-f0-9]{64}$/;
+const ISO_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const hrefSchema = z.string().startsWith("/").refine(
+  (value) => !value.startsWith("//") && !value.includes(".."),
+  "href must stay within this site",
+);
+const publicHttpUrlSchema = z.string().url().refine(
+  (value) => /^https?:\/\//.test(value),
+  "external URL must use http(s)",
+);
+const externalUrlSchema = publicHttpUrlSchema.nullable();
 
 const projectSchema = z.object({
   slug: z.string(),
@@ -25,30 +35,87 @@ const noteSchema = z.object({
   placeholder: z.boolean().default(false),
 });
 
-const libraryEntrySchema = z.object({
-  date: z.string(),
-  title: z.string(),
-  takeaway: z.string(),
-  sourceType: z.enum(["文章", "视频", "播客", "论文"]),
-  creator: z.string(),
-  sourceUrl: externalUrlSchema,
-  topic: z.string(),
-  href: hrefSchema,
-  placeholder: z.boolean().default(false),
-});
-
-const xiaohongshuPostSchema = z.object({
+const xiaohongshuPostContentShape = {
   title: z.string(),
   summary: z.string(),
   publishedAt: z.string(),
   sourceUrl: externalUrlSchema,
-  placeholder: z.boolean().default(false),
-});
+};
+
+export const xiaohongshuPostContentSchema = z.object(xiaohongshuPostContentShape).strict();
+
+const placeholderXiaohongshuPostSchema = z.object({
+  ...xiaohongshuPostContentShape,
+  publicationStatus: z.literal("placeholder"),
+  placeholder: z.literal(true),
+  contentSha256: z.null(),
+}).strict();
+
+const approvedXiaohongshuPostSchema = z.object({
+  ...xiaohongshuPostContentShape,
+  publishedAt: z.string().regex(ISO_DAY_PATTERN),
+  sourceUrl: publicHttpUrlSchema,
+  publicationStatus: z.literal("approved"),
+  placeholder: z.literal(false),
+  contentSha256: z.string().regex(SHA256_PATTERN),
+}).strict();
+
+export const xiaohongshuPostSchema = z.discriminatedUnion("publicationStatus", [
+  placeholderXiaohongshuPostSchema,
+  approvedXiaohongshuPostSchema,
+]);
 
 export type Project = z.infer<typeof projectSchema>;
 export type Note = z.infer<typeof noteSchema>;
-export type LibraryEntry = z.infer<typeof libraryEntrySchema>;
 export type XiaohongshuPost = z.infer<typeof xiaohongshuPostSchema>;
+export type XiaohongshuPostContent = z.infer<typeof xiaohongshuPostContentSchema>;
+
+function beijingDay(now: Date | string = new Date()): string {
+  const date = now instanceof Date ? now : new Date(now);
+  if (!Number.isFinite(date.valueOf())) throw new Error("Expected a valid timestamp");
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function contentFromXiaohongshuPost(post: XiaohongshuPost): XiaohongshuPostContent {
+  return xiaohongshuPostContentSchema.parse({
+    title: post.title,
+    summary: post.summary,
+    publishedAt: post.publishedAt,
+    sourceUrl: post.sourceUrl,
+  });
+}
+
+export function computeXiaohongshuPostSha256(content: XiaohongshuPostContent): string {
+  return createHash("sha256")
+    .update(JSON.stringify(xiaohongshuPostContentSchema.parse(content)))
+    .digest("hex");
+}
+
+export function loadXiaohongshuPosts(
+  value: unknown,
+  asOfDate = beijingDay(),
+): XiaohongshuPost[] {
+  const posts = z.array(xiaohongshuPostSchema).parse(value);
+  const titles = new Set<string>();
+  for (const post of posts) {
+    if (titles.has(post.title)) throw new Error(`xiaohongshu:${post.title}: duplicate title`);
+    titles.add(post.title);
+    if (post.publicationStatus === "approved") {
+      if (post.publishedAt > asOfDate) {
+        throw new Error(`xiaohongshu:${post.title}: publishedAt is in the future`);
+      }
+      if (computeXiaohongshuPostSha256(contentFromXiaohongshuPost(post)) !== post.contentSha256) {
+        throw new Error(`xiaohongshu:${post.title}: approved content SHA-256 does not match`);
+      }
+    }
+  }
+  return posts;
+}
 
 export const projects = z.array(projectSchema).parse([
   {
@@ -63,8 +130,8 @@ export const projects = z.array(projectSchema).parse([
   },
   {
     slug: "ask-lizheng",
-    title: "课代表立正",
-    summary: "先问清目标和约束，再基于公开语料给出带来源的行动建议。",
+    title: "问问立正",
+    summary: "基于立正公开 Context 的独立问答实验：先问清目标和约束，再根据公开语料给出带来源的行动建议。",
     stage: "概念验证",
     tags: ["AI", "MiniMax", "RAG"],
     href: "/ask/",
@@ -73,7 +140,7 @@ export const projects = z.array(projectSchema).parse([
   },
   {
     slug: "personal-site",
-    title: "在场笔记",
+    title: "Stay on table",
     summary: "把写作、项目、求职和长期输入放进同一个可持续更新的个人主页。",
     stage: "正在搭建",
     tags: ["Next.js", "GitHub Pages", "Build in public"],
@@ -116,76 +183,38 @@ export const notes = z.array(noteSchema).parse([
   },
 ]);
 
-export const libraryEntries = z.array(libraryEntrySchema).parse([
-  {
-    date: "2026-08-31",
-    title: "从收藏到观点：建立自己的内容处理管线",
-    takeaway: "记录来源只是第一步；更重要的是写下它改变了哪个判断，并在未来能被重新找到。",
-    sourceType: "文章",
-    creator: "作者待补充",
-    sourceUrl: null,
-    topic: "知识管理",
-    href: "/library/2026-08-31/",
-    placeholder: true,
-  },
-  {
-    date: "2026-08-30",
-    title: "优秀演示视频的节奏从哪里来",
-    takeaway: "镜头不是越碎越好。每次切换都应该服务于信息层级，而不是掩盖内容本身。",
-    sourceType: "视频",
-    creator: "频道待补充",
-    sourceUrl: null,
-    topic: "内容创作",
-    href: "/library/",
-    placeholder: true,
-  },
-  {
-    date: "2026-08-28",
-    title: "把 AI 产品的价值假设写成可验证的问题",
-    takeaway: "先定义用户愿意改变什么行为，再讨论模型能力；技术演示不能替代需求证据。",
-    sourceType: "播客",
-    creator: "节目待补充",
-    sourceUrl: null,
-    topic: "AI 产品",
-    href: "/library/",
-    placeholder: true,
-  },
-  {
-    date: "2026-08-25",
-    title: "如何做一场信息密度更高的访谈",
-    takeaway: "用具体经历代替态度表达，用追问还原真实决策环境。",
-    sourceType: "文章",
-    creator: "作者待补充",
-    sourceUrl: null,
-    topic: "沟通",
-    href: "/library/",
-    placeholder: true,
-  },
-]);
-
-export const xiaohongshuPosts = z.array(xiaohongshuPostSchema).parse([
+export const xiaohongshuPosts = loadXiaohongshuPosts([
   {
     title: "一个工具怎样慢慢变成工作流",
     summary: "用短内容记录从临时技巧到可复用方法的过程。",
     publishedAt: "待补充",
     sourceUrl: null,
+    publicationStatus: "placeholder",
     placeholder: true,
+    contentSha256: null,
   },
   {
     title: "最近一次 AI 产品实验的三个观察",
     summary: "先用真实素材替换示例，再开放对应的小红书原文链接。",
     publishedAt: "待补充",
     sourceUrl: null,
+    publicationStatus: "placeholder",
     placeholder: true,
+    contentSha256: null,
   },
 ]);
 
 export const siteMeta = {
-  name: "在场笔记",
-  owner: "立正",
+  name: "Stay on table",
+  owner: "JoJo Liu",
   description: "写作、项目、求职、每日输入与投资复盘。一个持续更新的个人主页。",
+  email: "zdliu20@fudan.edu.cn",
+  github: {
+    handle: "StayOnTable",
+    profileUrl: "https://github.com/StayOnTable",
+  },
   xiaohongshu: {
-    handle: "小红书账号待补充",
+    handle: "落得一身星",
     profileUrl: null,
   },
 } as const;

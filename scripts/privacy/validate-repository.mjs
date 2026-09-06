@@ -9,7 +9,6 @@ export const EXCLUDED_DIRECTORIES = new Set([
   "node_modules",
   ".next",
   "out",
-  "tests",
 ]);
 
 const BLOCKED_EXTENSIONS = new Set([
@@ -17,12 +16,17 @@ const BLOCKED_EXTENSIONS = new Set([
   ".db",
   ".duckdb",
   ".feather",
+  ".key",
+  ".keystore",
   ".log",
   ".mdb",
   ".mt940",
   ".ofx",
   ".parquet",
   ".pdf",
+  ".pem",
+  ".p12",
+  ".pfx",
   ".qfx",
   ".sql",
   ".sqlite",
@@ -85,6 +89,8 @@ const SENSITIVE_ENV_NAME =
   /(?:API[_-]?KEY|SECRET|TOKEN|PASSWORD|PRIVATE[_-]?KEY|ACCOUNT[_-]?ID|QUERY[_-]?ID|CLIENT[_-]?ID)/i;
 const SAFE_PLACEHOLDER =
   /^(?:|<[^>]+>|your[-_].*|replace[-_].*|change[-_]?me|example|dummy|placeholder|redacted)$/i;
+const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+export const PUBLIC_EMAIL_ALLOWLIST = new Set(["zdliu20@fudan.edu.cn"]);
 
 const SENSITIVE_PATTERNS = [
   {
@@ -166,6 +172,16 @@ function envExampleViolations(text, relativePath) {
   return violations;
 }
 
+function unapprovedEmailViolation(text, relativePath) {
+  const matches = text.match(EMAIL_PATTERN) ?? [];
+  const unapproved = matches.find(
+    (email) => !PUBLIC_EMAIL_ALLOWLIST.has(email.toLowerCase()),
+  );
+  return unapproved
+    ? [{ path: relativePath, reason: "possible unapproved email address" }]
+    : [];
+}
+
 async function walk(root, directory, violations, files) {
   const entries = await readdir(directory, { withFileTypes: true });
   for (const entry of entries) {
@@ -219,6 +235,7 @@ export async function scanRepository(rootArgument = ".") {
     if (basename(path).toLowerCase() === ".env.example") {
       violations.push(...envExampleViolations(text, name));
     }
+    violations.push(...unapprovedEmailViolation(text, name));
     for (const { label, pattern } of SENSITIVE_PATTERNS) {
       pattern.lastIndex = 0;
       if (pattern.test(text)) violations.push({ path: name, reason: `possible ${label}` });

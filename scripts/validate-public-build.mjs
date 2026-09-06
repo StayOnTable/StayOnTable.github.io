@@ -7,6 +7,7 @@ import { dirname, extname, join, normalize, relative, resolve } from "node:path"
 const FULL_DISCLAIMER =
   "仅为个人投资复盘与记录，不构成任何投资建议。市场有风险，请独立判断。";
 const SHORT_DISCLAIMER = "仅个人复盘，非投资建议。";
+const INVESTMENT_HISTORY_START_DATE = "2026-04-01";
 const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".map", ".txt", ".xml"]);
 const FORBIDDEN_FILE_EXTENSIONS = new Set([".csv", ".db", ".env", ".log", ".sqlite", ".sqlite3"]);
 const SENSITIVE_VALUE_PATTERNS = [
@@ -31,6 +32,13 @@ const SENSITIVE_VALUE_PATTERNS = [
 
 function fail(message) {
   throw new Error(`Public build validation failed: ${message}`);
+}
+
+function hasExactKeys(value, expectedKeys) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const actual = Object.keys(value).sort();
+  const expected = [...expectedKeys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
 }
 
 async function walk(directory) {
@@ -123,17 +131,115 @@ async function main() {
     join(outputDirectory, "investing", "index.html"),
     "investing page",
   );
-  if (!visibleText(homeHtml).includes(SHORT_DISCLAIMER)) {
+  const investmentPanel = JSON.parse(
+    await readRequired(
+      resolve("src/content/investment-public.json"),
+      "public investment data",
+    ),
+  );
+  const homeText = visibleText(homeHtml);
+  const investingText = visibleText(investingHtml);
+  if (
+    investmentPanel.schemaVersion !== "investment-public-v3" ||
+    investmentPanel.currency !== "USD"
+  ) {
+    fail("the checked-in investment candidate is not the strict USD-only v3 contract");
+  }
+  if (investmentPanel.performance.coverageStartDate < INVESTMENT_HISTORY_START_DATE) {
+    fail(`public investment history begins before ${INVESTMENT_HISTORY_START_DATE}`);
+  }
+  if (
+    !hasExactKeys(investmentPanel.performance, [
+      "measure",
+      "coverageStartDate",
+      "coverageEndDate",
+      "weeklyReturnPct",
+      "monthlyReturnPct",
+      "quarterlyReturnPct",
+      "weeklySeries",
+    ])
+  ) {
+    fail("the public performance object contains a retired or unknown metric");
+  }
+  if (
+    !investmentPanel.positions.every((position) =>
+      hasExactKeys(position, ["assetType", "displaySymbol", "direction", "allocationPct"]),
+    )
+  ) {
+    fail("a public position exposes more than its symbol, type, direction, and allocation");
+  }
+  if (
+    !investmentPanel.weeklyTrades.every((trade) =>
+      hasExactKeys(trade, [
+        "tradeDate",
+        "displaySymbol",
+        "assetType",
+        "side",
+        "amountAbsUsd",
+        "fillCount",
+      ]),
+    )
+  ) {
+    fail("a public weekly trade does not match the minimal USD aggregate contract");
+  }
+  if (!homeText.includes(SHORT_DISCLAIMER)) {
     fail("the home investment summary is missing its compact disclaimer");
   }
-  if (!visibleText(investingHtml).includes(FULL_DISCLAIMER)) {
+  if (!investingText.includes(FULL_DISCLAIMER)) {
     fail("/investing does not contain the full visible disclaimer");
   }
-  if (!visibleText(investingHtml).includes("2025年4月以来，以100为起点")) {
-    fail("/investing does not state the public performance chart baseline");
+  if (
+    !investingText.includes("本周收益率") ||
+    !investingText.includes("本月收益率") ||
+    !investingText.includes("本季度收益率")
+  ) {
+    fail("/investing does not visibly render the three approved TWR periods");
   }
-  if (!visibleText(investingHtml).includes("本周期权操作")) {
-    fail("/investing does not visibly render the weekly option-trade section");
+  if (
+    !investingText.includes("持仓构成") ||
+    !investingText.includes("仅展示公开持仓占比")
+  ) {
+    fail("/investing does not clearly label the allocation-only public position view");
+  }
+  if (investingText.includes("USD 持仓占比")) {
+    fail("/investing unnecessarily presents a currency unit for a percentage-only position view");
+  }
+  if (
+    !investingText.includes("自记录起点以来的累计收益率") ||
+    !investingText.includes("以 0% 为基线") ||
+    !investingText.includes("TWR（时间加权收益率）")
+  ) {
+    fail("/investing does not clearly present the chart as cumulative TWR percentage from a zero baseline");
+  }
+  if (
+    !investingText.includes("已实现与未实现的收益或亏损") ||
+    !investingText.includes("外部现金流被中和") ||
+    !investingText.includes("成交金额本身不会被当作收益")
+  ) {
+    fail("/investing does not explain the account-level TWR and cash-flow treatment");
+  }
+  for (const misleadingChartLabel of ["组合指数", "累计指数"]) {
+    if (investingText.includes(misleadingChartLabel)) {
+      fail(`/investing still renders an index label instead of a return percentage: ${misleadingChartLabel}`);
+    }
+  }
+  if (
+    !investingText.includes("本周成交订单") ||
+    !investingText.includes("成交金额（USD）") ||
+    !investingText.includes("成交笔数")
+  ) {
+    fail("/investing does not visibly render the minimal completed-trade snapshot");
+  }
+  for (const retiredLabel of ["今年以来", "近一年", "最大回撤", "成交均价"]) {
+    if (investingText.includes(retiredLabel)) {
+      fail(`/investing still renders the retired label: ${retiredLabel}`);
+    }
+  }
+  if (investmentPanel.publicationStatus === "preview") {
+    const previewNotice = "本地预览 · 尚未公开发布";
+    if (!investingText.includes(previewNotice) || !homeText.includes(previewNotice)) {
+      fail("preview investment data is not visibly marked as unpublished");
+    }
   }
 
   const files = await walk(outputDirectory);
@@ -220,13 +326,17 @@ async function main() {
   );
   const shareCard = files.find((file) => relative(outputDirectory, file) === shareManifest.file);
   if (!shareCard) fail("the social share card is missing");
-  if (shareManifest.visibleDisclaimer !== "仅个人复盘，非投资建议") {
-    fail("the reviewed share image manifest is missing the required disclaimer");
+  if (
+    shareManifest.kind !== "site-cover" ||
+    shareManifest.containsInvestmentData !== false ||
+    shareManifest.visibleDisclaimer !== null
+  ) {
+    fail("the reviewed site cover manifest does not match the non-investment share-card policy");
   }
   const shareBytes = await readFile(shareCard);
   const shareHash = createHash("sha256").update(shareBytes).digest("hex");
   if (shareHash !== shareManifest.sha256) {
-    fail("the social share card changed without a new visual disclaimer review");
+    fail("the social share card changed without a new visual review");
   }
   if (
     shareBytes.subarray(1, 4).toString("ascii") !== "PNG" ||

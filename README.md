@@ -1,4 +1,4 @@
-# 在场笔记
+# Stay on table
 
 一个面向 GitHub Pages 的中文个人主页，收纳写作、项目、求职旅程、每日输入与投资复盘。
 
@@ -27,14 +27,14 @@ npm run check
 
 所有 `src/app/**/page.mdx` 必须在 `src/content/publications.json` 中恰好登记一次。明确的演示页使用 `publicationStatus: placeholder`、`placeholder: true` 和可见的占位说明；真实发布使用 `publicationStatus: approved`、非未来的北京时间日期，以及与 MDX 原始字节一致的 SHA-256。`pending-review`、未来日期、漏登记页面、哈希不匹配或敏感信息都会让 `npm run content:validate` 和 `prebuild` 失败。投资周报同样受此门禁约束。
 
-求职时间轴从 `src/content/journey-public.json` 加载。公开记录不接受 `pending-review`，`href` 必须是 `/journey/<slug>/`，批准记录还必须通过规范字段的内容哈希校验。私有的 `eventAt` 和审核记录不属于公开 schema，因此无法混入构建。
+求职时间轴从 `src/content/journey-public.json` 加载。公开记录不接受 `pending-review`，`href` 必须是 `/journey/<slug>/`，批准记录还必须通过规范字段的内容哈希校验。`publishedAt` 表示内容发布日期，不再根据面试节点增加人工延迟；只有用户针对精确版本明确授权后，私有 `eventAt` 才能以日期级 `eventDate` 进入公开记录。授权标记、审批证据与其他私有字段不属于公开 schema，因此无法混入构建。
 
 ```bash
 npm run content:validate
 npm run test:content
 ```
 
-分享图经过人工可见性检查后，其尺寸、免责声明文案与 SHA-256 会登记在 `scripts/share-image-manifest.json`。替换图片时必须重新确认“仅个人复盘，非投资建议”清晰可读并更新清单，否则构建会失败。
+通用站点封面经过人工可见性检查后，其用途、尺寸与 SHA-256 会登记在 `scripts/share-image-manifest.json`。它不展示投资数据，因此不带投资免责声明；任何包含投资数据或投资周报内容的专用分享图仍必须清晰展示“仅个人复盘，非投资建议”。替换图片时必须重新检查并更新清单，否则构建会失败。
 
 ## GitHub Pages
 
@@ -56,11 +56,11 @@ npm run test:content
 ## 上线前清单
 
 - 确认 `StayOnTable/StayOnTable.github.io` 的 Pages 工作流首次部署成功。
-- 替换姓名简介、小红书账号与真实帖子链接、社群二维码及联系方式占位。
+- 补充小红书主页与真实帖子链接、社群二维码，以及首批真实内容。
 - 配置 Giscus 的四个公开仓库变量。
 - 人工预览并批准第一次 IBKR 历史回填；在此之前不启用周六任务，也不展示真实数据。
 - 真实投资正文必须针对精确 revision 单独批准；数值与正文不是同一个发布权限。
 
 ## 内容与许可
 
-站点代码采用 MIT License。文章、图片、投资数据与个人内容不包含在 MIT 授权范围内，详见 `CONTENT-LICENSE.md`。
+站点代码采用 MIT License。文章、图片、投资数据与个人内容不包含在 MIT 授权范围内，详见 `CONTENT-LICENSE.md`；小红书标识与访问统计服务等第三方内容详见 `THIRD-PARTY-NOTICES.md`。

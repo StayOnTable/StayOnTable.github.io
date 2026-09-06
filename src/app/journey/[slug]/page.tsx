@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CommentedArticleLayout } from "@/components/commented-article-layout";
+import { JourneyBody } from "@/components/journey-body";
 import { PageIntro, PlaceholderBadge } from "@/components/ui";
 import { journeyEntries } from "@/content/journey";
 
@@ -39,7 +40,7 @@ export default async function JourneyDetailPage({
     <CommentedArticleLayout>
       <article className="shell page-shell article-shell">
         <PageIntro
-          eyebrow={`JOURNEY · 发布于 ${entry.publishedAt}`}
+          eyebrow={`JOURNEY · 节点日期 ${entry.eventDate}`}
           title={entry.title}
           description={entry.summary}
         />
@@ -47,11 +48,7 @@ export default async function JourneyDetailPage({
         <p className="timeline-card__role">
           {entry.company} · {entry.role} · {entry.round} · {entry.interviewStatus}
         </p>
-        <div className="prose">
-          {entry.body.split(/\n{2,}/).map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
+        <JourneyBody body={entry.body} className="prose journey-body" />
       </article>
     </CommentedArticleLayout>
   );

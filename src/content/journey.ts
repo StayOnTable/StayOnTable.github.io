@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import journeyFeedJson from "./journey-public.json";
+import journeyMomentsJson from "./journey-moments.json";
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -27,13 +28,14 @@ const JourneyHrefSchema = z
   .refine((value) => !value.startsWith("//") && !value.includes(".."), "Unsafe journey href");
 
 const JourneyContentShape = {
-  schemaVersion: z.literal("journey-public-v1"),
+  schemaVersion: z.literal("journey-public-v2"),
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Expected a lowercase hyphenated slug"),
   title: z.string().trim().min(1),
   company: z.string().trim().min(1),
   role: z.string().trim().min(1),
   round: z.string().trim().min(1),
   interviewStatus: z.string().trim().min(1),
+  eventDate: IsoDaySchema,
   publishedAt: IsoDaySchema,
   summary: z.string().trim().min(1),
   body: z.string().trim().min(1),
@@ -68,14 +70,56 @@ export const JourneyPublicEntrySchema = z.discriminatedUnion("publicationStatus"
 
 export const JourneyPublicFeedSchema = z
   .object({
-    schemaVersion: z.literal("journey-public-feed-v1"),
+    schemaVersion: z.literal("journey-public-feed-v2"),
     entries: z.array(JourneyPublicEntrySchema),
+  })
+  .strict();
+
+const JourneyMomentContentShape = {
+  schemaVersion: z.literal("journey-moment-v1"),
+  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Expected a lowercase hyphenated slug"),
+  publishedAt: IsoDaySchema,
+  text: z.string().trim().min(1).max(240),
+};
+
+export const JourneyMomentContentSchema = z.object(JourneyMomentContentShape).strict();
+
+const PlaceholderJourneyMomentSchema = z
+  .object({
+    ...JourneyMomentContentShape,
+    publicationStatus: z.literal("placeholder"),
+    placeholder: z.literal(true),
+    contentSha256: z.null(),
+  })
+  .strict();
+
+const ApprovedJourneyMomentSchema = z
+  .object({
+    ...JourneyMomentContentShape,
+    publicationStatus: z.literal("approved"),
+    placeholder: z.literal(false),
+    contentSha256: z.string().regex(SHA256_PATTERN),
+  })
+  .strict();
+
+export const JourneyMomentSchema = z.discriminatedUnion("publicationStatus", [
+  PlaceholderJourneyMomentSchema,
+  ApprovedJourneyMomentSchema,
+]);
+
+export const JourneyMomentsFeedSchema = z
+  .object({
+    schemaVersion: z.literal("journey-moments-feed-v1"),
+    entries: z.array(JourneyMomentSchema),
   })
   .strict();
 
 export type JourneyContent = z.infer<typeof JourneyContentSchema>;
 export type JourneyEntry = z.infer<typeof JourneyPublicEntrySchema>;
 export type JourneyPublicFeed = z.infer<typeof JourneyPublicFeedSchema>;
+export type JourneyMomentContent = z.infer<typeof JourneyMomentContentSchema>;
+export type JourneyMoment = z.infer<typeof JourneyMomentSchema>;
+export type JourneyMomentsFeed = z.infer<typeof JourneyMomentsFeedSchema>;
 
 export class JourneyFeedError extends Error {
   readonly errors: readonly string[];
@@ -107,6 +151,7 @@ function contentFromEntry(entry: JourneyEntry): JourneyContent {
     role: entry.role,
     round: entry.round,
     interviewStatus: entry.interviewStatus,
+    eventDate: entry.eventDate,
     publishedAt: entry.publishedAt,
     summary: entry.summary,
     body: entry.body,
@@ -115,9 +160,27 @@ function contentFromEntry(entry: JourneyEntry): JourneyContent {
   });
 }
 
+function contentFromMoment(moment: JourneyMoment): JourneyMomentContent {
+  return JourneyMomentContentSchema.parse({
+    schemaVersion: moment.schemaVersion,
+    slug: moment.slug,
+    publishedAt: moment.publishedAt,
+    text: moment.text,
+  });
+}
+
 export function computeJourneyContentSha256(content: JourneyContent): string {
   const canonical = JourneyContentSchema.parse(content);
   return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+}
+
+export function computeJourneyMomentSha256(content: JourneyMomentContent): string {
+  const canonical = JourneyMomentContentSchema.parse(content);
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+}
+
+export function countJourneyInterviewReviews(entries: readonly JourneyEntry[]): number {
+  return entries.filter((entry) => entry.interviewStatus !== "起点").length;
 }
 
 export function loadJourneyFeed(
@@ -172,5 +235,57 @@ export function loadJourneyFeed(
   return parsed.data;
 }
 
+export function loadJourneyMomentsFeed(
+  value: unknown,
+  asOfDate = beijingDay(),
+): JourneyMomentsFeed {
+  if (!IsoDaySchema.safeParse(asOfDate).success) {
+    throw new JourneyFeedError(["asOfDate: expected a real YYYY-MM-DD date"]);
+  }
+
+  const parsed = JourneyMomentsFeedSchema.safeParse(value);
+  if (!parsed.success) {
+    const errors = parsed.error.issues.map((issue) => {
+      const path = issue.path.length > 0 ? issue.path.join(".") : "moments";
+      return `${path}: ${issue.message}`;
+    });
+    throw new JourneyFeedError(errors);
+  }
+
+  const errors: string[] = [];
+  const slugs = new Set<string>();
+  for (const moment of parsed.data.entries) {
+    const label = `journey-moment:${moment.slug}`;
+    if (slugs.has(moment.slug)) errors.push(`${label}: duplicate slug`);
+    slugs.add(moment.slug);
+
+    if (moment.publishedAt > asOfDate) {
+      errors.push(`${label}: publishedAt is in the future for Asia/Shanghai`);
+    }
+
+    const serialized = JSON.stringify(moment);
+    if (EMAIL_PATTERN.test(serialized)) errors.push(`${label}: possible email address`);
+    if (MAINLAND_PHONE_PATTERN.test(serialized)) {
+      errors.push(`${label}: possible mainland phone number`);
+    }
+    if (CREDENTIAL_ASSIGNMENT_PATTERN.test(serialized)) {
+      errors.push(`${label}: possible credential assignment`);
+    }
+    if (LOCAL_PATH_PATTERN.test(serialized)) errors.push(`${label}: possible local absolute path`);
+    if (PRIVATE_KEY_PATTERN.test(serialized)) errors.push(`${label}: possible private key`);
+    if (
+      moment.publicationStatus === "approved" &&
+      computeJourneyMomentSha256(contentFromMoment(moment)) !== moment.contentSha256
+    ) {
+      errors.push(`${label}: approved content SHA-256 does not match`);
+    }
+  }
+
+  if (errors.length > 0) throw new JourneyFeedError(errors);
+  return parsed.data;
+}
+
 export const journeyFeed = loadJourneyFeed(journeyFeedJson as unknown);
 export const journeyEntries = journeyFeed.entries;
+export const journeyMomentsFeed = loadJourneyMomentsFeed(journeyMomentsJson as unknown);
+export const journeyMoments = journeyMomentsFeed.entries;
