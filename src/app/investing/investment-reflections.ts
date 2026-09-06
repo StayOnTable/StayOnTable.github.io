@@ -62,6 +62,24 @@ export function loadInvestmentReflections(value: unknown): InvestmentReflection[
 
 export const investmentReflections = loadInvestmentReflections([
   {
+    id: "semiconductor-strength-and-buying-discipline",
+    date: "2026-09-04",
+    title: "半导体走强，更要保持买入纪律",
+    body: "周五，半导体与存储板块明显走强，闪迪（SNDK）仍处相对高位；Snowflake 及软件股相较之下缺少持续性，SNOW 从前一日约 385 美元的高点回落至约 337 美元。回头看，没有在急涨时追高，是更合适的选择。接下来我会更谨慎地控制买卖节奏。我仍没有看到市场对 AI capex 最终 ROI 的充分信心，因此较大的波动可能还会持续。近期我在分批配置 Broadcom（AVGO）和 Qualcomm（QCOM）；我的判断是，它们仍可能处在估值偏低、等待催化剂的阶段，这让我想到 Palantir 过去等待重估的一段走势，但类比并不等于结论。此前逢低布局的 Meta 近期也在回升。对我而言，面对基本面认可的公司，buy the dip 应建立在耐心、分批和仓位纪律上，而不是追涨。",
+    sources: [
+      {
+        label: "9 月 4 日美股与半导体板块表现",
+        url: "https://apnews.com/article/1af16359af43eb8abc66445465f633c8",
+      },
+      {
+        label: "Snowflake 历史行情",
+        url: "https://stockanalysis.com/stocks/snow/history/",
+      },
+    ],
+    publicationStatus: "approved",
+    contentSha256: "b9812629e3185f129b1735eea78962c88eafdd7d6e5f1d7144cd44f0673027ec",
+  },
+  {
     id: "snowflake-earnings-and-dip-buying",
     date: "2026-09-03",
     title: "Snowflake财报后暴涨22%",
