@@ -264,6 +264,33 @@
       "publicationStatus": "approved",
       "placeholder": false,
       "contentSha256": "05fd0c64de969fe2b28bde783608d863ee6323482a9afc4e865559407d3e1cc5"
+    },
+    {
+      "schemaVersion": "journey-public-v2",
+      "slug": "ant-financial-generative-recommendation-round-1",
+      "title": "蚂蚁金服 · 推荐算法（生成式推荐）一面",
+      "company": "蚂蚁金服",
+      "role": "推荐算法（生成式推荐方向）",
+      "round": "一面",
+      "interviewStatus": "waiting",
+      "eventDate": "2026-09-07",
+      "publishedAt": "2026-09-07",
+      "summary": "本次交流更偏技术，重点讨论了生成式推荐的模型扩展、OneRec Label Decoder 的序列设计和跨场景建模；也暴露出我在序列统计口径与多场景方法论上仍需补强的部分。",
+      "body": "这次面试的讨论重点集中在生成式推荐。\n\n面试官首先问到 model scale-up：增大 embedding dimension，和增加 Transformer block 数量，哪一种方式更有效？我的回答是，两者不能直接横向比较，因为增大 embedding dimension 带来的参数量增幅更大；如果不控制参数增量规模，就很难公平判断两种方式的效果。\n\n另一个没有答好的问题，是 OneRec Label Decoder 输入 token 序列的平均长度。对方比较关注短期行为、长期行为和用户 context 在输入序列中的使用与设计。我提到，长期序列取用户近 30 天的行为 item，并通过 max pooling 避免序列过长；但当我回答平均长度约为 20 时，对方指出，这个长度似乎不足以支撑 max pooling 的必要性。这里暴露出我对序列长度统计口径、压缩动机和实际收益的量化说明还不够扎实，需要进一步补强。\n\n交流也从分发模型延伸到了跨场景建模。我介绍了通过业务规则映射不同场景中的 item（活动）ID，以补充特征；在算法层面，我回答了 shared-bottom 加多头结构：不同头对应不同样本空间，共享底层表征，也可以为不同场景设置独立 bias。不过这一部分目前仍偏初步，后续需要系统补充多场景建模的理解。\n\n这次面试也让我进一步确认了简历叙事的两条主线：一条是生成式推荐的技术演进；另一条是策略与业务理解，包括多目标之间的 trade-off。相比逐个介绍项目，这两条主线更能串起我的经验和价值。\n\n最后的算法题是三数之和，要求完整写出代码。截至记录时，面试结果尚未公布。",
+      "tags": [
+        "推荐算法",
+        "生成式推荐",
+        "一面",
+        "waiting",
+        "model scale-up",
+        "OneRec",
+        "跨场景建模",
+        "三数之和"
+      ],
+      "href": "/journey/ant-financial-generative-recommendation-round-1/",
+      "publicationStatus": "approved",
+      "placeholder": false,
+      "contentSha256": "6cc33c04ec602359fedc99d45098e4947b17e3ebbfbf0da383a8b8d1891b78fd"
     }
   ]
 }
