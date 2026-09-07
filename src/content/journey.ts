@@ -213,7 +213,10 @@ export function loadJourneyFeed(
     if (entry.href !== `/journey/${entry.slug}/`) {
       errors.push(`${label}: href must equal the canonical slug route`);
     }
-    const serialized = JSON.stringify(entry);
+    // The hash is deterministic hexadecimal metadata, not author-supplied copy.
+    // Excluding it prevents a coincidental 11-digit run from being mistaken for
+    // a mainland phone number while every reader-visible field remains scanned.
+    const serialized = JSON.stringify({ ...entry, contentSha256: undefined });
     if (EMAIL_PATTERN.test(serialized)) errors.push(`${label}: possible email address`);
     if (MAINLAND_PHONE_PATTERN.test(serialized)) {
       errors.push(`${label}: possible mainland phone number`);
