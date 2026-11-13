@@ -6,7 +6,7 @@
     "dev": "next dev",
     "prebuild": "npm run content:validate && npm run investment:validate && npm run privacy:repository",
     "build": "next build --webpack",
-    "postbuild": "node scripts/validate-public-build.mjs && npm run privacy:out",
+    "postbuild": "node scripts/validate-public-build.mjs && npm run privacy:out && cp weekend-band-teleprompter.html out/index.html",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",

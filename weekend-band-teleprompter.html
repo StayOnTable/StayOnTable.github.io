@@ -1,0 +1,2295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131514">
+<title>Weekend Band · 舞台提词器</title>
+<style>
+:root {
+  color-scheme: dark;
+  --background: #131514;
+  --rail: #191c19;
+  --control: #212621;
+  --rule: #333a32;
+  --quiet: #a8b2a7;
+  --text: #f4f5ed;
+  --accent: #d3f398;
+  --accent-deep: #293422;
+  --rail-width: 252px;
+  --toolbar: 66px;
+  --gutter: clamp(24px, 5vw, 80px);
+  --lyric-size: 38px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--background); }
+body { margin: 0; color: var(--text); }
+button, select, textarea, input { font: inherit; }
+button, select {
+  color: var(--text);
+  background: var(--control);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button { padding: 0 14px; white-space: nowrap; }
+button:hover:not(:disabled), select:hover { border-color: #737f6c; }
+button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+button:disabled { cursor: default; }
+[hidden] { display: none !important; }
+.shell { display: grid; grid-template-columns: var(--rail-width) minmax(0, 1fr); }
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  align-self: start;
+  overflow: auto;
+  background: var(--rail);
+  border-right: 1px solid var(--rule);
+  padding: 24px 16px max(22px, env(safe-area-inset-bottom));
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 2px 6px 23px; }
+.mark {
+  display: inline-grid;
+  grid-template-columns: repeat(4, 3px);
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #58624d;
+  border-radius: 8px;
+  background: var(--accent-deep);
+  flex: 0 0 auto;
+}
+.mark i { background: var(--accent); border-radius: 2px; height: 11px; }
+.mark i:nth-child(2) { height: 19px; }
+.mark i:nth-child(3) { height: 14px; }
+.mark i:nth-child(4) { height: 8px; }
+.brand strong { display: block; font-size: 16px; letter-spacing: -.025em; }
+.brand small { display: block; color: var(--quiet); font-size: 12px; margin-top: 4px; }
+.set-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--rule);
+  padding: 18px 7px 10px;
+}
+.set-heading h2 { margin: 0; font-size: 13px; font-weight: 650; letter-spacing: .08em; }
+.set-heading span { color: var(--quiet); font-size: 12px; }
+.setlist { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.song {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  text-align: left;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 14px;
+}
+.song:disabled { color: #b4bdb2; }
+.song[aria-current="true"] { border-color: #4c5a40; background: #2a3426; color: #eef9e3; }
+.song-number { font-variant-numeric: tabular-nums; color: var(--quiet); font-size: 12px; }
+.song[aria-current="true"] .song-number, .song-state { color: var(--accent); }
+.song-state { font-size: 11px; }
+.song-state:empty { display: none; }
+.song:focus-visible { outline-offset: -2px; }
+.file-caption { margin: 0 0 6px; color: var(--quiet); font-size: 13px; }
+.bulk-import { border-top: 1px solid var(--rule); padding-top: 12px; margin-top: 18px; }
+.song-name { overflow: hidden; text-overflow: ellipsis; }
+.script-entry {
+  grid-template-columns: 35px minmax(0, 1fr);
+  gap: 7px;
+  padding-left: 12px;
+  color: #efd9b1;
+  font-size: 13px;
+}
+.script-entry .song-number { color: #e5b878; }
+.script-entry .song-name { white-space: normal; }
+.script-entry[aria-current="true"] { border-color: #755735; background: #3a3024; color: #fff0d7; }
+.interlude {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #c3cdbf;
+  padding: 5px 9px;
+  font-size: 11px;
+}
+.interlude::before { content: ""; display: inline-block; width: 15px; height: 1px; background: #78856e; }
+.rail-close, .rail-open, .rail-shade { display: none; }
+.stage { min-width: 0; }
+.toolbar {
+  min-height: var(--toolbar);
+  padding: max(9px, env(safe-area-inset-top)) var(--gutter) 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom: 1px solid var(--rule);
+  background: #171a17;
+}
+.toolbar-start, .toolbar-end, .font-control { display: flex; align-items: center; gap: 8px; }
+.toolbar-title { color: var(--text); white-space: nowrap; font-size: 14px; font-weight: 650; }
+.font-control { gap: 4px; }
+.font-control button { width: 44px; padding: 0; }
+.font-control output { min-width: 33px; text-align: center; font-variant-numeric: tabular-nums; color: var(--quiet); font-size: 13px; }
+.score { padding: 37px var(--gutter) 196px; overflow-anchor: none; }
+.score[data-script="true"] { padding-bottom: 116px; }
+.score[data-script="true"] .content-mode {
+  color: #f3cc90;
+  background: #3a3024;
+  border-color: #755735;
+}
+.script-copy { max-width: 940px; border-top: 1px solid var(--rule); padding-top: 18px; }
+.script-paragraph, .script-direction { white-space: pre-wrap; overflow-wrap: anywhere; }
+.script-paragraph {
+  margin: 0 0 .84em;
+  font-size: clamp(20px, calc(var(--lyric-size) * .82), 64px);
+  line-height: 1.55;
+  font-weight: 590;
+}
+.script-direction {
+  margin: 0 0 16px;
+  padding: 9px 12px;
+  border-left: 3px solid #a77946;
+  color: #efc991;
+  background: #231e18;
+  font-size: clamp(15px, calc(var(--lyric-size) * .49), 35px);
+  font-weight: 650;
+  line-height: 1.5;
+}
+.song-meta { display: flex; flex-wrap: wrap; gap: 8px 13px; align-items: center; color: var(--quiet); font-size: 13px; }
+.content-mode {
+  padding: 3px 7px;
+  border: 1px solid #4a5b41;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-deep);
+}
+h1 {
+  margin: 12px 0 0;
+  font-size: clamp(34px, 5.4vw, 64px);
+  letter-spacing: -.055em;
+  line-height: 1.1;
+}
+.source-note { color: var(--quiet); margin: 12px 0 0; font-size: 14px; line-height: 1.55; }
+.source-links { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; }
+.source-links a { color: var(--accent); text-underline-offset: 3px; }
+.stanza[data-preview="true"]:not(:last-child) { min-height: clamp(126px, 18dvh, 180px); }
+.stanza-note { margin: 4px 0 0; color: var(--quiet); font-size: clamp(16px, 2.1vw, 21px); line-height: 1.55; }
+.cue-text { margin: 0; font-size: clamp(27px, calc(var(--lyric-size) * .9), 54px); line-height: 1.25; font-weight: 680; }
+.sections { margin-top: 32px; }
+.stanza { padding-block: 15px 0; border-top: 1px solid var(--rule); max-width: 960px; }
+.stanza + .stanza { margin-top: 42px; }
+.stanza:last-child { min-height: max(200px, calc(100dvh - 190px)); }
+.stanza h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 8px;
+  color: #b0bcae;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.stanza h2::before { content: ""; width: 9px; height: 2px; background: #879282; border-radius: 2px; }
+.stanza[data-current="true"] h2 { color: var(--accent); }
+.stanza[data-current="true"] h2::before { background: var(--accent); }
+.stanza time { color: #a8b3a4; letter-spacing: 0; font-variant-numeric: tabular-nums; font-weight: 500; }
+.line {
+  margin: 0;
+  font-size: var(--lyric-size);
+  font-weight: 690;
+  color: var(--text);
+  line-height: 1.43;
+  letter-spacing: .012em;
+  overflow-wrap: anywhere;
+}
+.transport {
+  position: fixed;
+  z-index: 3;
+  bottom: 0;
+  left: var(--rail-width);
+  right: 0;
+  padding: 10px var(--gutter) max(10px, env(safe-area-inset-bottom));
+  background: #191e19;
+  border-top: 1px solid #4b5745;
+  display: grid;
+  gap: 7px;
+}
+.song-transport, .show-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-width: 0;
+}
+.show-nav button { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.show-next { margin-left: auto; color: var(--accent); border-color: #4c5a40; }
+.transport-group { display: flex; gap: 7px; align-items: center; }
+.timeline {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 100%;
+  min-width: 0;
+  padding: 6px 10px 6px 12px;
+  background: #222923;
+  border: 1px solid #455041;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.timeline input { flex: 1 1 0; min-width: 0; margin: 0; min-height: 26px; accent-color: var(--accent); cursor: pointer; }
+.timeline output { color: var(--text); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.read-position { min-width: 0; display: grid; gap: 3px; }
+.read-position strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.read-position small { color: var(--quiet); font-size: 12px; white-space: nowrap; }
+.transport button:disabled { color: #a1aa9e; opacity: .62; }
+.play {
+  background: var(--accent);
+  color: #151d12;
+  border-color: var(--accent);
+  font-weight: 750;
+  min-width: 96px;
+}
+.play:hover:not(:disabled) { background: #e0f8b7; border-color: #e0f8b7; }
+.pace { padding: 0 7px; font-size: 13px; }
+dialog {
+  color: var(--text);
+  background: var(--rail);
+  border: 1px solid #56604f;
+  border-radius: 16px;
+  width: min(560px, calc(100% - 28px));
+  padding: 23px;
+  max-height: calc(100dvh - 26px);
+}
+dialog::backdrop { background: #0c0f0bd9; }
+.dialog-title, .dialog-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dialog-title h2 { margin: 0; font-size: 21px; }
+.dialog-title button { min-width: 44px; font-size: 21px; padding: 0; }
+dialog p { color: var(--quiet); font-size: 14px; line-height: 1.55; }
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 135px;
+  resize: vertical;
+  color: var(--text);
+  background: var(--background);
+  padding: 11px;
+  border: 1px solid #596355;
+  border-radius: 8px;
+  line-height: 1.55;
+}
+.file-row { margin: 12px 0; }
+input[type=file] { max-width: 100%; color: var(--quiet); }
+input::file-selector-button {
+  background: var(--control);
+  color: var(--text);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  min-height: 39px;
+  padding: 0 10px;
+  margin-right: 7px;
+}
+#import-message { color: var(--accent); }
+@media (max-width: 1000px) {
+  :root { --rail-width: 226px; --gutter: clamp(22px, 4.8vw, 45px); }
+}
+@media (max-width: 890px), (max-width: 1100px) and (orientation: portrait) {
+  :root { --rail-width: 0px; }
+  .shell { display: block; }
+  .rail { display: none; }
+  .rail[data-open="true"] {
+    display: block;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(290px, 86vw);
+    z-index: 5;
+  }
+  .rail-close { display: inline-block; margin-left: auto; padding: 0 10px; }
+  .rail-open { display: inline-block; }
+  .rail-shade[data-open="true"] { display: block; position: fixed; inset: 0; background: #0b0d0bc9; z-index: 4; }
+}
+@media (max-width: 490px) {
+  :root { --gutter: 15px; --toolbar: 59px; }
+  .toolbar { gap: 4px; padding-top: max(6px, env(safe-area-inset-top)); padding-bottom: 6px; }
+  .toolbar-title { display: none; }
+  .font-control { gap: 0; }
+  .font-control output { min-width: 29px; }
+  .song-transport { flex-wrap: wrap; }
+  .show-nav { gap: 6px; }
+  .show-nav button { font-size: 13px; }
+  .read-position { width: 100%; display: flex; align-items: baseline; justify-content: space-between; }
+  .transport-group { gap: 5px; }
+  .transport button { padding: 0 10px; }
+  .transport .play { min-width: 83px; }
+  .score { padding-top: 29px; }
+}
+
+body.stage-ready #offline-reader { display: none; }
+.offline-reader { max-width: 940px; margin: 0 auto; padding: 0 var(--gutter) 48px; }
+.offline-reader a { color: var(--accent); text-underline-offset: 4px; }
+.offline-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: max(8px, env(safe-area-inset-top)) 0 8px;
+  min-height: 54px;
+  background: var(--background);
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+  font-weight: 650;
+}
+.offline-toolbar a, .offline-jumps a, .offline-index a { display: inline-block; padding: 12px 4px; }
+.offline-help, .offline-meta, .offline-stanza h3, .offline-interlude { color: var(--quiet); }
+.offline-help { margin: 13px 0 19px; font-size: 14px; }
+.offline-meta { margin: 0 0 8px; font-size: 14px; }
+.offline-item, .offline-index { scroll-margin-top: 82px; }
+.offline-item { padding: 24px 0 32px; border-bottom: 2px solid var(--rule); }
+.offline-item:first-of-type { padding-top: 6px; }
+.offline-item h1, .offline-item h2, .offline-index h2 { margin: 0 0 18px; font-size: clamp(32px, 5.8vw, 52px); }
+.offline-stanza { margin: 17px 0 27px; }
+.offline-stanza h3 { margin: 0 0 7px; font-size: 15px; }
+.offline-stanza time { margin-left: 8px; }
+.offline-lyric {
+  margin: 0;
+  font-size: clamp(22px, 4.4vw, 37px);
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.offline-jumps { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 10px; }
+.offline-index { padding-top: 26px; }
+.offline-index ol { margin: 0; padding: 0; list-style: none; }
+.offline-index li { border-bottom: 1px solid var(--rule); }
+.offline-index a { display: block; }
+.offline-script-link { padding-left: 16px; }
+.offline-reader .offline-script-link a { color: #efc991; }
+.offline-interlude { padding: 10px 4px; font-size: 14px; }
+.offline-break { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<main id="offline-reader" class="offline-reader">
+<header class="offline-toolbar"><span>Weekend Band · 手动提词</span><a href="#offline-setlist">歌单 ↓</a></header>
+<p class="offline-help">上下滑动查看全场歌词和串词。</p>
+<article class="offline-item" id="offline-north"><p class="offline-meta">周杰伦</p><h1>一路向北</h1>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:35</time></h3>
+<p class="offline-lyric">后视镜里的世界 越来越远的道别</p>
+<p class="offline-lyric">你转身向背 侧脸还是很美</p>
+<p class="offline-lyric">我用眼光去追 竟听见你的泪</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>01:04</time></h3>
+<p class="offline-lyric">在车窗外面徘徊 是我错失的机会</p>
+<p class="offline-lyric">你站的方位 跟我中间隔着泪</p>
+<p class="offline-lyric">街景一直在后退 你的崩溃在窗外零碎</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:30</time></h3>
+<p class="offline-lyric">我一路向北 离开有你的季节</p>
+<p class="offline-lyric">你说你好累 已无法再爱上谁</p>
+<p class="offline-lyric">风在山路吹 过往的画面全都是我不对</p>
+<p class="offline-lyric">细数惭愧 我伤你几回</p></section>
+<section class="offline-stanza"><h3>间奏 <time>01:58</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 2 <time>02:19</time></h3>
+<p class="offline-lyric">后视镜里的世界 越来越远的道别</p>
+<p class="offline-lyric">你转身向背 侧脸还是很美</p>
+<p class="offline-lyric">我用眼光去追 竟听见你的泪</p></section>
+<section class="offline-stanza"><h3>预副歌 2 <time>02:49</time></h3>
+<p class="offline-lyric">在车窗外面徘徊 是我错失的机会</p>
+<p class="offline-lyric">你站的方位 跟我中间隔着泪</p>
+<p class="offline-lyric">街景一直在后退 你的崩溃在窗外零碎</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>03:15</time></h3>
+<p class="offline-lyric">我一路向北 离开有你的季节</p>
+<p class="offline-lyric">你说你好累 已无法再爱上谁</p>
+<p class="offline-lyric">风在山路吹 过往的画面全都是我不对</p>
+<p class="offline-lyric">细数惭愧 我伤你几回</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:43</time></h3>
+<p class="offline-lyric">我一路向北 离开有你的季节</p>
+<p class="offline-lyric">方向盘周围 回转着我的后悔</p>
+<p class="offline-lyric">我加速超越 却甩不掉紧紧跟随的伤悲</p>
+<p class="offline-lyric">细数惭愧 我伤你几回</p>
+<p class="offline-lyric">停止狼狈 就让错纯粹</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>04:22</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-north">下一项 · 《一路向北》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-north"><p class="offline-meta">唱完《一路向北》后讲</p><h2>《一路向北》后串词</h2>
+<p class="script-direction">①《一路向北》结束 →《Dear John》</p>
+<p class="script-direction">［等最后一个音结束，留一点时间给掌声，再开口。］</p>
+<p class="script-paragraph">谢谢大家！</p>
+<p class="script-paragraph">晚上好，我们是 Weekend Band，双休日乐队，我是 JoJo。欢迎大家来听我们的专场！</p>
+<p class="script-paragraph">用一句话来形容今天就是：“人好多啊”，相信都是我们乐手的亲朋好友 都是家人一般的存在啊</p>
+<p class="script-paragraph">我知道今天是不是来了蛮多宝哥的粉丝的，宝哥的应援团在哪里？</p>
+<p class="script-paragraph">所以宝哥的应援色是什么颜色啊，上次我在群里说是 阿宝色， 然后有一个人回复说：“嗯，阿宝是挺色的”
+我们宝哥看到之后直接be like：omg 你吓到我啦</p>
+<p class="script-paragraph">OK 开个小玩笑啦</p>
+<p class="script-paragraph">希望大家能够享受我们今天的演出  有酒水零食记得去畅饮哦  不用太客气</p>
+<p class="script-paragraph">我们现在正经的 正儿八经的 介绍一下我们的乐队成员 每个人会来一段单独的solo 用音乐代替语言</p>
+<p class="script-direction">【乐手介绍环节】</p>
+<p class="script-paragraph">键盘手 Kiwi</p>
+<p class="script-paragraph">吉他手 Judge</p>
+<p class="script-paragraph">鼓手 Laura</p>
+<p class="script-paragraph">吉他手 Jackie</p>
+<p class="script-paragraph">“蛮好，蛮好，结棍额&quot; 我都是第一次听。。。</p>
+<p class="script-paragraph">那其实，我们乐队是双主唱的配置，还有一位女主唱 Suri</p>
+<p class="script-paragraph">下一首歌呢，她会给大家带来 比莉的《Dear John》。歌名可能有点陌生哈，但旋律一出来，你们应该就知道了 “听过 听过” 这样子。</p>
+<p class="script-paragraph">那接下来，交给Suri</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-dear-john">下一项 · Dear John ↓</a></nav></article>
+<article class="offline-item" id="offline-dear-john"><p class="offline-meta">比莉</p><h2>Dear John</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:14</time></h3>
+<p class="offline-lyric">关上门 一个人 行李上车</p>
+<p class="offline-lyric">将心情 化妆成 初恋的快乐</p>
+<p class="offline-lyric">我要我 为自己 找回自我 找到些什么</p></section>
+<section class="offline-stanza"><h3>主歌续段 1 <time>00:27</time></h3>
+<p class="offline-lyric">铃声响 dear John 在电话那头</p>
+<p class="offline-lyric">你说话 很温柔 像一颗石头</p>
+<p class="offline-lyric">坚定的 镇住我 心头波涛 我想泪流</p>
+<p class="offline-lyric">原来 爱没有 遗弃我</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>00:44</time></h3>
+<p class="offline-lyric">你的爱会将我灌醉</p>
+<p class="offline-lyric">我没有所谓</p>
+<p class="offline-lyric">太过清醒怎么陶醉</p>
+<p class="offline-lyric">你的爱</p>
+<p class="offline-lyric">像是杯太浓的咖啡</p>
+<p class="offline-lyric">让我失眠彻夜</p>
+<p class="offline-lyric">好爱这种感觉</p></section>
+<section class="offline-stanza"><h3>间奏 1 <time>01:10</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 2 <time>01:24</time></h3>
+<p class="offline-lyric">关上门 一个人 行李上车</p>
+<p class="offline-lyric">将心情 化妆成 初恋的快乐</p>
+<p class="offline-lyric">我要我 为自己 找回自我 找到些什么</p></section>
+<section class="offline-stanza"><h3>主歌续段 2 <time>01:37</time></h3>
+<p class="offline-lyric">铃声响 dear John 在电话那头</p>
+<p class="offline-lyric">你说话 很温柔 像一颗石头</p>
+<p class="offline-lyric">坚定的 镇住我 心头波涛 我想泪流</p>
+<p class="offline-lyric">原来</p>
+<p class="offline-lyric">爱没有 遗弃我</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>01:55</time></h3>
+<p class="offline-lyric">你的爱会将我灌醉</p>
+<p class="offline-lyric">我没有所谓</p>
+<p class="offline-lyric">太过清醒怎么陶醉</p>
+<p class="offline-lyric">你的爱</p>
+<p class="offline-lyric">像是杯太浓的咖啡</p>
+<p class="offline-lyric">让我失眠彻夜</p>
+<p class="offline-lyric">好爱这种感觉</p></section>
+<section class="offline-stanza"><h3>桥段 <time>02:28</time></h3>
+<p class="offline-lyric">每一次恋爱过程很像是赌注</p>
+<p class="offline-lyric">付出全部拿回什么不清楚</p>
+<p class="offline-lyric">也许爱过至少学会找到感动或知足</p>
+<p class="offline-lyric">难说当爱落幕赢或输</p></section>
+<section class="offline-stanza"><h3>间奏 2 <time>02:54</time></h3>
+</section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:21</time></h3>
+<p class="offline-lyric">你的爱会将我灌醉</p>
+<p class="offline-lyric">我没有所谓</p>
+<p class="offline-lyric">太过清醒怎么陶醉</p>
+<p class="offline-lyric">你的爱</p>
+<p class="offline-lyric">像是杯太浓的咖啡</p>
+<p class="offline-lyric">让我失眠彻夜</p>
+<p class="offline-lyric">好爱这种感觉 my love</p></section>
+<section class="offline-stanza"><h3>尾段人声 <time>03:47</time></h3>
+<p class="offline-lyric">Baby baby baby 不想牵挂</p>
+<p class="offline-lyric">心就要起飞 到那充满可能的国界</p>
+<p class="offline-lyric">Baby baby baby 我是你的</p>
+<p class="offline-lyric">你是我的就够了</p>
+<p class="offline-lyric">别想那么多</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>04:13</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-black-tangerine">下一项 · 黑色柳丁 ↓</a></nav></article>
+<article class="offline-item" id="offline-black-tangerine"><p class="offline-meta">陶喆</p><h2>黑色柳丁</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:18</time></h3>
+<p class="offline-lyric">今天我心情有一点怪怪</p>
+<p class="offline-lyric">可是说不出到底为什么</p>
+<p class="offline-lyric">好像有一些悲伤的征兆</p>
+<p class="offline-lyric">可是病因不知道</p>
+<p class="offline-lyric">头上有橘色的加州阳光</p>
+<p class="offline-lyric">我的口袋只有黑色的柳丁</p>
+<p class="offline-lyric">我只有一个蓝色的感觉</p>
+<p class="offline-lyric">不要问我为什么</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>00:50</time></h3>
+<p class="offline-lyric">很想说 但又觉得没有话好说</p>
+<p class="offline-lyric">我只恨我自己 逃不出这监狱</p>
+<p class="offline-lyric">或许我 是个没有出息的小虫</p>
+<p class="offline-lyric">不该一直作梦 你不是个英雄</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:20</time></h3>
+<p class="offline-lyric">叶子用坠落证明换季</p>
+<p class="offline-lyric">可我昏昏沉沉没有办法醒</p>
+<p class="offline-lyric">你愿意做个英雄</p>
+<p class="offline-lyric">还是你会要放弃</p>
+<p class="offline-lyric">天是亮的却布满乌云</p>
+<p class="offline-lyric">所有焦距被闪光判了死刑</p>
+<p class="offline-lyric">你想做什么英雄</p>
+<p class="offline-lyric">我看你不过是佣兵</p></section>
+<section class="offline-stanza"><h3>副歌尾句 1 <time>01:53</time></h3>
+<p class="offline-lyric">我只想哭 只想哭 只想哭</p>
+<p class="offline-lyric">我只想哭 只想哭 只想哭</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>02:05</time></h3>
+<p class="offline-lyric">今天一起床我就头痛</p>
+<p class="offline-lyric">不管吃了几瓶药都没有用</p>
+<p class="offline-lyric">心情有一点莫名的焦躁</p>
+<p class="offline-lyric">你离我越远越好</p>
+<p class="offline-lyric">外面有橘色的加州阳光</p>
+<p class="offline-lyric">我却躲在自己孤独的黑洞</p>
+<p class="offline-lyric">我只有一个小小的要求</p>
+<p class="offline-lyric">就是请你leave me alone</p></section>
+<section class="offline-stanza"><h3>预副歌 2 <time>02:38</time></h3>
+<p class="offline-lyric">很想说 但又觉得没有话好说</p>
+<p class="offline-lyric">我只恨我自己 逃不出这监狱</p>
+<p class="offline-lyric">或许我 是个没有出息的小虫</p>
+<p class="offline-lyric">不该一直作梦 你不是个英雄</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>03:08</time></h3>
+<p class="offline-lyric">叶子用坠落证明换季</p>
+<p class="offline-lyric">可我昏昏沉沉没有办法醒</p>
+<p class="offline-lyric">你愿意做个英雄</p>
+<p class="offline-lyric">还是你会要放弃</p>
+<p class="offline-lyric">天是亮的却布满乌云</p>
+<p class="offline-lyric">所有焦距被闪光判了死刑</p>
+<p class="offline-lyric">你想做什么英雄</p>
+<p class="offline-lyric">我看你不过是佣兵</p></section>
+<section class="offline-stanza"><h3>副歌尾句 2 <time>03:39</time></h3>
+<p class="offline-lyric">我只想哭 只想哭 只想哭</p>
+<p class="offline-lyric">我只想哭 只想哭 只想哭</p></section>
+<section class="offline-stanza"><h3>尾声 <time>03:54</time></h3>
+<p class="offline-lyric">今天我心情有一点烂烂</p>
+<p class="offline-lyric">可是说不出到底为什么</p>
+<p class="offline-lyric">好像有一点悲哀的征兆</p>
+<p class="offline-lyric">可是病因不知道</p></section>
+<section class="offline-stanza"><h3>结尾反复 <time>04:09</time></h3>
+<p class="offline-lyric">我只想哭 只想哭 只想哭</p>
+<p class="offline-lyric">我只想哭 只想哭 只想哭</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-regular-friends">下一项 · 普通朋友 ↓</a></nav></article>
+<article class="offline-item" id="offline-regular-friends"><p class="offline-meta">陶喆</p><h2>普通朋友</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:19</time></h3>
+<p class="offline-lyric">等待</p>
+<p class="offline-lyric">我随时随地在等待</p>
+<p class="offline-lyric">做你感情上的依赖</p>
+<p class="offline-lyric">我没有任何的疑问</p>
+<p class="offline-lyric">这是爱</p></section>
+<section class="offline-stanza"><h3>主歌续段 1 <time>00:41</time></h3>
+<p class="offline-lyric">我猜</p>
+<p class="offline-lyric">你早就想要说明白</p>
+<p class="offline-lyric">我觉得自己好失败</p>
+<p class="offline-lyric">从天堂掉落到深渊</p>
+<p class="offline-lyric">多无奈</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>01:02</time></h3>
+<p class="offline-lyric">我愿意改变 (what can I do?)</p>
+<p class="offline-lyric">重新再来一遍(just give me change)</p>
+<p class="offline-lyric">我无法只是普通朋友</p>
+<p class="offline-lyric">感情已那么深</p>
+<p class="offline-lyric">叫我怎么能收手</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:26</time></h3>
+<p class="offline-lyric">但你说</p>
+<p class="offline-lyric">I only want to be your friend</p>
+<p class="offline-lyric">做个朋友</p>
+<p class="offline-lyric">我在</p>
+<p class="offline-lyric">你心中只是just a friend</p>
+<p class="offline-lyric">不是情人</p>
+<p class="offline-lyric">我感激你对我这样的坦白</p>
+<p class="offline-lyric">但我给你的爱暂时收不回来</p>
+<p class="offline-lyric">So I</p>
+<p class="offline-lyric">我不能只是be your friend</p>
+<p class="offline-lyric">I just can&#39;t be your friend</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>02:15</time></h3>
+<p class="offline-lyric">我猜</p>
+<p class="offline-lyric">你早就想要说明白</p>
+<p class="offline-lyric">我觉得自己好失败</p>
+<p class="offline-lyric">从天堂掉落到深渊</p>
+<p class="offline-lyric">多无奈</p></section>
+<section class="offline-stanza"><h3>预副歌 2 <time>02:37</time></h3>
+<p class="offline-lyric">我愿意改变 (what can I do?)</p>
+<p class="offline-lyric">重新再来一遍(just give me change)</p>
+<p class="offline-lyric">我无法只是普通朋友</p>
+<p class="offline-lyric">感情已那么深</p>
+<p class="offline-lyric">叫我怎么能收手</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>03:01</time></h3>
+<p class="offline-lyric">但你说</p>
+<p class="offline-lyric">I only want to be your friend</p>
+<p class="offline-lyric">做个朋友</p>
+<p class="offline-lyric">我在</p>
+<p class="offline-lyric">你心中只是just a friend</p>
+<p class="offline-lyric">不是情人</p>
+<p class="offline-lyric">我感激你对我这样的坦白</p>
+<p class="offline-lyric">但我给你的爱暂时收不回来</p>
+<p class="offline-lyric">So I</p>
+<p class="offline-lyric">我不能只是be your friend</p>
+<p class="offline-lyric">I just can&#39;t be your friend</p></section>
+<section class="offline-stanza"><h3>尾声 <time>03:51</time></h3>
+<p class="offline-lyric">no,no,no,</p>
+<p class="offline-lyric">我不能只是做你的朋友</p>
+<p class="offline-lyric">不能只是做普通朋友</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-friends">下一项 · 《普通朋友》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-friends"><p class="offline-meta">唱完《普通朋友》后讲</p><h2>《普通朋友》后串词</h2>
+<p class="script-paragraph">谢谢大家！</p>
+<p class="script-paragraph">这首歌叫《普通朋友》，我觉得是非常考验唱功的，而且也非常考验我们的吉他老师，前奏还是蛮难的，感谢Judge</p>
+<p class="script-paragraph">不知道大家有没有关注到我们刚刚这首歌的贝斯手，其实是我们的键盘老师Kiwi，非常的全能啊，不愧是星海音乐学院毕业的钢琴老师</p>
+<p class="script-paragraph">说到kiwi，其实在kiwi之前，我是乐队的键盘手，大半年的时间 也排过许多歌</p>
+<p class="script-paragraph">但是kiwi一出现，这个水平有一个断崖式的碾压啊，所以强势入驻，她不仅是键盘手，也是我们乐队排练时的指导老师，咱就是说 她直接就成为weekend band最严厉的父亲</p>
+<p class="script-paragraph">那接下来呢，我们把舞台交给Kiwi和Suri，带来一首邓紫棋的《泡沫》。</p>
+<p class="script-paragraph">这首歌我觉得很适合在现场听：开始像是在轻轻说话，情绪再一点一点往上走。</p>
+<p class="script-paragraph">所以，我们先安静下来，把接下来的几分钟交给她们</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-bubble">下一项 · 泡沫 ↓</a></nav></article>
+<article class="offline-item" id="offline-bubble"><p class="offline-meta">G.E.M. 邓紫棋</p><h2>泡沫</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:01</time></h3>
+<p class="offline-lyric">阳光下的泡沫 是彩色的 就像被骗的我 是幸福的</p>
+<p class="offline-lyric">追究什么对错 你的谎言 基于你还爱我</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>00:28</time></h3>
+<p class="offline-lyric">美丽的泡沫 虽然一刹花火 你所有承诺 虽然都太脆弱</p>
+<p class="offline-lyric">但爱像泡沫 如果能够看破 有什么难过</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>00:58</time></h3>
+<p class="offline-lyric">早该知道泡沫 一触就破 就像已伤的心 不胜折磨</p>
+<p class="offline-lyric">也不是谁的错 谎言再多 基于你还爱我</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>01:25</time></h3>
+<p class="offline-lyric">美丽的泡沫 虽然一刹花火 你所有承诺 虽然都太脆弱</p>
+<p class="offline-lyric">爱本是泡沫 如果能够看破 有什么难过</p></section>
+<section class="offline-stanza"><h3>副歌变化 <time>01:53</time></h3>
+<p class="offline-lyric">再美的花朵 盛开过就凋落 再亮眼的星 一闪过就坠落</p>
+<p class="offline-lyric">爱本是泡沫 如果能够看破 有什么难过</p></section>
+<section class="offline-stanza"><h3>桥段 <time>02:21</time></h3>
+<p class="offline-lyric">为什么难过 有什么难过 为什么难过</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>02:46</time></h3>
+<p class="offline-lyric">全都是泡沫 只一刹的花火 你所有承诺 全部都太脆弱</p>
+<p class="offline-lyric">而你的轮廓 怪我没有看破 才如此难过</p></section>
+<section class="offline-stanza"><h3>副歌延续 <time>03:15</time></h3>
+<p class="offline-lyric">相爱的把握 要如何再搜索 相拥着寂寞 难道就不寂寞</p>
+<p class="offline-lyric">爱本是泡沫 怪我没有看破 才如此难过</p></section>
+<section class="offline-stanza"><h3>尾段人声 <time>03:45</time></h3>
+<p class="offline-lyric">在雨下的泡沫 一触就破 当初炽热的心 早以沉没</p>
+<p class="offline-lyric">说什么你爱我 如果骗我 我宁愿你沉默</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>04:11</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-wrong-love">下一项 · 爱错 ↓</a></nav></article>
+<article class="offline-item" id="offline-wrong-love"><p class="offline-meta">王力宏</p><h2>爱错</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:13</time></h3>
+<p class="offline-lyric">北风毫不留情</p>
+<p class="offline-lyric">把叶子吹落</p>
+<p class="offline-lyric">坠落的它选择了逃脱</p>
+<p class="offline-lyric">叶子失去消息</p>
+<p class="offline-lyric">风才感觉寂寞</p>
+<p class="offline-lyric">整个冬天</p>
+<p class="offline-lyric">北风的痛没人能说</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>00:45</time></h3>
+<p class="offline-lyric">我从来没想过</p>
+<p class="offline-lyric">我会这样做</p>
+<p class="offline-lyric">从来没爱过</p>
+<p class="offline-lyric">所以爱错</p>
+<p class="offline-lyric">我从哪里起飞</p>
+<p class="offline-lyric">从哪里降落</p>
+<p class="offline-lyric">多少不能原谅的错 却不能重来过</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>01:19</time></h3>
+<p class="offline-lyric">翻开回忆角落</p>
+<p class="offline-lyric">完美的生活</p>
+<p class="offline-lyric">以为幸福都可以掌握</p>
+<p class="offline-lyric">仔细回味当初那个故事背后</p>
+<p class="offline-lyric">喔 原来是我</p>
+<p class="offline-lyric">犯下从没承认的错</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>01:51</time></h3>
+<p class="offline-lyric">我从来没想过</p>
+<p class="offline-lyric">我会这样做</p>
+<p class="offline-lyric">从来没爱过 所以爱错</p>
+<p class="offline-lyric">我 从那里起飞</p>
+<p class="offline-lyric">从那里降落</p>
+<p class="offline-lyric">多少不能原谅的错却不能重来过</p></section>
+<section class="offline-stanza"><h3>桥段 <time>02:22</time></h3>
+<p class="offline-lyric">在这少了你的世界</p>
+<p class="offline-lyric">喔 找不会那些感觉</p>
+<p class="offline-lyric">其实我不想 道别</p>
+<p class="offline-lyric">那些过去</p></section>
+<section class="offline-stanza"><h3>副歌 3 <time>02:43</time></h3>
+<p class="offline-lyric">我从来没想过</p>
+<p class="offline-lyric">我会这样做</p>
+<p class="offline-lyric">从来没爱过 （从来没有爱过那么认真）</p>
+<p class="offline-lyric">我从那里起飞</p>
+<p class="offline-lyric">从那里降落（降落）</p>
+<p class="offline-lyric">多少不能原谅的错却不能重</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:09</time></h3>
+<p class="offline-lyric">我从来没想过</p>
+<p class="offline-lyric">我会这样做</p>
+<p class="offline-lyric">从来没爱过（爱过）</p>
+<p class="offline-lyric">所以爱错（所以爱错）</p>
+<p class="offline-lyric">从那里起飞（爱错 爱错 爱错baby）</p>
+<p class="offline-lyric">从那里降落</p>
+<p class="offline-lyric">多少不能原谅的错</p>
+<p class="offline-lyric">请你原谅我的 爱错</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-love">下一项 · 《爱错》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-love"><p class="offline-meta">唱完《爱错》后讲</p><h2>《爱错》后串词</h2>
+<p class="script-paragraph">谢谢大家</p>
+<p class="script-paragraph">这首 爱错 其实是单依纯和王力宏的版本啊 现场有没有单依纯的粉丝啊？</p>
+<p class="script-paragraph">诶那我考考你啊  单依纯的演唱会  她会跟粉丝说 欢迎你们登陆什么岛？</p>
+<p class="script-paragraph">1. 答对了 —— 那很本质了 喜欢单依纯 你很有品    那我们上点难度好不好 能不能在十秒钟说出单依纯的三首歌 要原创哦</p>
+<p class="script-paragraph">2. 不知道 —— 可惜了 那我们奖品还是得送 我们换个题 —— 问现场有没有喜欢孙燕姿的，说出孙燕姿的三首歌</p>
+<p class="script-paragraph">接下来 Suri演唱一首《我怀念的》 听这首歌的时候 我还在上小学 刚学会上厕所  所以我相信大家也非常耳熟能详  欢迎suri</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-remember">下一项 · 我怀念的 ↓</a></nav></article>
+<p class="offline-interlude offline-break">猜歌互动</p>
+<article class="offline-item" id="offline-remember"><p class="offline-meta">孙燕姿</p><h2>我怀念的</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:17</time></h3>
+<p class="offline-lyric">我问为什么</p>
+<p class="offline-lyric">那女孩传简讯给我</p>
+<p class="offline-lyric">而你为什么</p>
+<p class="offline-lyric">不解释低着头沉默</p>
+<p class="offline-lyric">我该相信你很爱我</p>
+<p class="offline-lyric">不愿意敷衍我</p>
+<p class="offline-lyric">还是明白</p>
+<p class="offline-lyric">你已不想挽回什么</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>00:46</time></h3>
+<p class="offline-lyric">想问为什么</p>
+<p class="offline-lyric">我不再是你的快乐</p>
+<p class="offline-lyric">可是为什么</p>
+<p class="offline-lyric">却苦笑说我都懂了</p>
+<p class="offline-lyric">自尊常常将人拖着</p>
+<p class="offline-lyric">把爱都走曲折</p>
+<p class="offline-lyric">假装了解是怕</p>
+<p class="offline-lyric">真相太赤裸裸</p>
+<p class="offline-lyric">狼狈比失去难受</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:14</time></h3>
+<p class="offline-lyric">我怀念的是无话不说</p>
+<p class="offline-lyric">我怀念的是一起作梦</p>
+<p class="offline-lyric">我怀念的是争吵以后</p>
+<p class="offline-lyric">还是想要爱你的冲动</p>
+<p class="offline-lyric">我记得那年生日</p>
+<p class="offline-lyric">也记得那一首歌</p>
+<p class="offline-lyric">记得那片星空</p>
+<p class="offline-lyric">最紧的右手</p>
+<p class="offline-lyric">最暖的胸口</p>
+<p class="offline-lyric">谁记得</p>
+<p class="offline-lyric">谁忘了</p></section>
+<section class="offline-stanza"><h3>预副歌 2 <time>01:56</time></h3>
+<p class="offline-lyric">想问为什么</p>
+<p class="offline-lyric">我不再是你的快乐</p>
+<p class="offline-lyric">可是为什么</p>
+<p class="offline-lyric">却苦笑说我都懂了</p>
+<p class="offline-lyric">自尊常常将人拖着</p>
+<p class="offline-lyric">把爱都走曲折</p>
+<p class="offline-lyric">假装了解是怕</p>
+<p class="offline-lyric">真相太赤裸裸</p>
+<p class="offline-lyric">狼狈比失去难受</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>02:24</time></h3>
+<p class="offline-lyric">我怀念的是无话不说</p>
+<p class="offline-lyric">我怀念的是一起作梦</p>
+<p class="offline-lyric">我怀念的是争吵以后</p>
+<p class="offline-lyric">还是想要爱你的冲动</p>
+<p class="offline-lyric">我记得那年生日</p>
+<p class="offline-lyric">也记得那一首歌</p>
+<p class="offline-lyric">记得那片星空</p>
+<p class="offline-lyric">最紧的右手</p>
+<p class="offline-lyric">最暖的胸口</p>
+<p class="offline-lyric">谁忘了</p></section>
+<section class="offline-stanza"><h3>副歌变化 <time>02:52</time></h3>
+<p class="offline-lyric">我怀念的是无言感动</p>
+<p class="offline-lyric">我怀念的是绝对炽热</p>
+<p class="offline-lyric">我怀念的是你很激动</p>
+<p class="offline-lyric">求我原谅抱得我都痛</p>
+<p class="offline-lyric">我记得你在背后</p>
+<p class="offline-lyric">也记得我颤抖着</p>
+<p class="offline-lyric">记得感觉汹涌</p>
+<p class="offline-lyric">最美的烟火</p>
+<p class="offline-lyric">最长的相拥</p></section>
+<section class="offline-stanza"><h3>桥段 <time>03:17</time></h3>
+<p class="offline-lyric">谁爱得太自由</p>
+<p class="offline-lyric">谁过头太远了</p>
+<p class="offline-lyric">谁要走我的心</p>
+<p class="offline-lyric">谁忘了那就是承诺</p>
+<p class="offline-lyric">谁自顾自地走</p>
+<p class="offline-lyric">谁忘了看着我</p>
+<p class="offline-lyric">谁让爱变沉重</p>
+<p class="offline-lyric">谁忘了要给你温柔</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:57</time></h3>
+<p class="offline-lyric">我怀念的</p>
+<p class="offline-lyric">我还有想要爱你的冲动</p>
+<p class="offline-lyric">我记得那年生日</p>
+<p class="offline-lyric">也记得那一首歌</p>
+<p class="offline-lyric">记得那片星空</p>
+<p class="offline-lyric">最紧的右手</p>
+<p class="offline-lyric">最暖的胸口</p></section>
+<section class="offline-stanza"><h3>尾段人声 <time>04:15</time></h3>
+<p class="offline-lyric">我放手</p>
+<p class="offline-lyric">我让座</p>
+<p class="offline-lyric">假洒脱</p>
+<p class="offline-lyric">谁懂我多么不舍得</p>
+<p class="offline-lyric">太爱了</p>
+<p class="offline-lyric">所以我</p>
+<p class="offline-lyric">没有哭</p>
+<p class="offline-lyric">没有说</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-expose">下一项 · 拆穿 ↓</a></nav></article>
+<article class="offline-item" id="offline-expose"><p class="offline-meta">周菲戈</p><h2>拆穿</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 <time>00:08</time></h3>
+<p class="offline-lyric">我 不喜欢说话</p>
+<p class="offline-lyric">不喜欢逛街</p>
+<p class="offline-lyric">却只喜欢沉默</p>
+<p class="offline-lyric">在 每一个清晨</p>
+<p class="offline-lyric">会默默祈祷</p>
+<p class="offline-lyric">每天会更美好</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>00:41</time></h3>
+<p class="offline-lyric">光阴荏苒有谁还记得</p>
+<p class="offline-lyric">那时天空准确的颜色</p>
+<p class="offline-lyric">听说真爱会出现在</p>
+<p class="offline-lyric">绚烂自私而无尽头的脑海</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:12</time></h3>
+<p class="offline-lyric">谁会来拆穿你编的谎言</p>
+<p class="offline-lyric">谁会去放开又独自离开</p>
+<p class="offline-lyric">我想谁都懂</p>
+<p class="offline-lyric">有个人你也不想再伤害</p>
+<p class="offline-lyric">我也不会再等着你回来</p></section>
+<section class="offline-stanza"><h3>间奏 <time>01:44</time></h3>
+</section>
+<section class="offline-stanza"><h3>预副歌 2 <time>02:02</time></h3>
+<p class="offline-lyric">光阴荏苒有谁还记得</p>
+<p class="offline-lyric">那时天空准确的颜色</p>
+<p class="offline-lyric">听说真爱会出现在</p>
+<p class="offline-lyric">绚烂自私而无尽头的脑海</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>02:34</time></h3>
+<p class="offline-lyric">谁会来拆穿你给的谎言</p>
+<p class="offline-lyric">谁会去放开又独自离开</p>
+<p class="offline-lyric">我想谁都懂</p>
+<p class="offline-lyric">有个人你也不想再伤害</p>
+<p class="offline-lyric">我也不会再等着你回来</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>03:07</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-expose">下一项 · 《拆穿》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-expose"><p class="offline-meta">唱完《拆穿》后讲</p><h2>《拆穿》后串词</h2>
+<p class="script-paragraph">谢谢大家</p>
+<p class="script-paragraph">这首拆穿 非常的苦情歌哈 接下来我们换一种感觉 稍微放松一点</p>
+<p class="script-paragraph">下一首是来自张震岳的《浪人的...》</p>
+<p class="script-paragraph">这首歌有一种很舒服的复古律动，不用想太多，也不用站得太端正，跟着节奏晃一晃就很好。</p>
+<p class="script-paragraph">交给Suri，《浪人的…》。</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-surfer">下一项 · 浪人的… ↓</a></nav></article>
+<article class="offline-item" id="offline-surfer"><p class="offline-meta">张震岳</p><h2>浪人的…</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:28</time></h3>
+<p class="offline-lyric">沙滩黄昏的色温 即将入夜的时分</p>
+<p class="offline-lyric">空气不再闷沉沉</p>
+<p class="offline-lyric">月亮从海平线慢吞吞</p>
+<p class="offline-lyric">你依然还是没出现 不是说要约</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>00:47</time></h3>
+<p class="offline-lyric">小屋里欢乐气氛 男男女女的笑声</p>
+<p class="offline-lyric">我心不在焉等着</p>
+<p class="offline-lyric">期待明天的浪顺顺的</p>
+<p class="offline-lyric">你依然还是没出现 我回车上睡</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>01:07</time></h3>
+<p class="offline-lyric">怀疑天气预报 准不准</p>
+<p class="offline-lyric">像是现在心情 微微冷</p>
+<p class="offline-lyric">难道你不知道 等你一整天 好闷</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:26</time></h3>
+<p class="offline-lyric">是我太认真</p>
+<p class="offline-lyric">无法像你一样 随心所欲到处混</p>
+<p class="offline-lyric">酒精蔓延全身</p>
+<p class="offline-lyric">误解你笑容 你的眼神太迷人</p>
+<p class="offline-lyric">是我太认真</p>
+<p class="offline-lyric">那一夜的派对 大伙疯狂到清晨</p>
+<p class="offline-lyric">月光如同迷药</p>
+<p class="offline-lyric">误解你的吻 原来是我太认真</p></section>
+<section class="offline-stanza"><h3>预副歌 2 <time>02:10</time></h3>
+<p class="offline-lyric">怀疑天气预报 准不准</p>
+<p class="offline-lyric">像是现在心情 微微冷</p>
+<p class="offline-lyric">难道你不知道 等你一整天 好闷</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>02:30</time></h3>
+<p class="offline-lyric">是我太认真</p>
+<p class="offline-lyric">无法像你一样 随心所欲到处混</p>
+<p class="offline-lyric">酒精蔓延全身</p>
+<p class="offline-lyric">误解你笑容 你的眼神太迷人</p>
+<p class="offline-lyric">是我太认真</p>
+<p class="offline-lyric">那一夜的派对 大伙疯狂到清晨</p>
+<p class="offline-lyric">月光如同迷药</p>
+<p class="offline-lyric">误解你的吻 原来是我太认真</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:09</time></h3>
+<p class="offline-lyric">是我太认真</p>
+<p class="offline-lyric">无法像你一样 随心所欲到处混</p>
+<p class="offline-lyric">酒精蔓延全身</p>
+<p class="offline-lyric">误解你笑容 你的眼神太迷人</p>
+<p class="offline-lyric">是我太认真</p>
+<p class="offline-lyric">那一夜的派对 大伙疯狂到清晨</p>
+<p class="offline-lyric">月光如同迷药</p>
+<p class="offline-lyric">误解你的吻 原来是我太认真</p></section>
+<section class="offline-stanza"><h3>尾句 <time>03:46</time></h3>
+<p class="offline-lyric">原来是我太认真</p>
+<p class="offline-lyric">原来是我太认真</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>03:50</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-i-dont-care">下一项 · 我管你 ↓</a></nav></article>
+<article class="offline-item" id="offline-i-dont-care"><p class="offline-meta">华晨宇</p><h2>我管你</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:11</time></h3>
+<p class="offline-lyric">我不大接受</p>
+<p class="offline-lyric">什么被委屈别还手</p>
+<p class="offline-lyric">我不太能够</p>
+<p class="offline-lyric">顺应所谓的大潮流</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">花臂或刺头</p>
+<p class="offline-lyric">应该没说明我所有</p>
+<p class="offline-lyric">我不找借口</p>
+<p class="offline-lyric">懂的人自然能看透</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">噢～噢～噢～</p></section>
+<section class="offline-stanza"><h3>预副歌 <time>00:53</time></h3>
+<p class="offline-lyric">没想辩解太多</p>
+<p class="offline-lyric">别用外表解说我</p>
+<p class="offline-lyric">误解不愿反驳</p>
+<p class="offline-lyric">我拒绝只谈如果</p></section>
+<section class="offline-stanza"><h3>呼应段 1 <time>01:15</time></h3>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:37</time></h3>
+<p class="offline-lyric">管你什么想法</p>
+<p class="offline-lyric">我是我自己的表达</p>
+<p class="offline-lyric">管你什么看法</p>
+<p class="offline-lyric">我的世界我来浮夸</p>
+<p class="offline-lyric">噢～噢～噢</p>
+<p class="offline-lyric">我管你说得多复杂</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我不要被谁给教化</p>
+<p class="offline-lyric">管你什么说法</p>
+<p class="offline-lyric">当我是傻或是笑话</p>
+<p class="offline-lyric">管你什么办法</p>
+<p class="offline-lyric">别幻想我沦落倒下</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">噢～噢～噢～</p></section>
+<section class="offline-stanza"><h3>桥段 <time>02:20</time></h3>
+<p class="offline-lyric">太多选择背后</p>
+<p class="offline-lyric">绝望像没有出口</p>
+<p class="offline-lyric">不如握紧拳头</p>
+<p class="offline-lyric">这就是我的所有</p></section>
+<section class="offline-stanza"><h3>呼应段 2 <time>02:41</time></h3>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你的感受</p>
+<p class="offline-lyric">噢～噢～噢～</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>03:03</time></h3>
+<p class="offline-lyric">管你多怪罪</p>
+<p class="offline-lyric">你没资格评头论足</p>
+<p class="offline-lyric">管你自以为</p>
+<p class="offline-lyric">你的意见我真不在乎</p>
+<p class="offline-lyric">噢～噢～噢～</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:35</time></h3>
+<p class="offline-lyric">管你什么想法</p>
+<p class="offline-lyric">我是我自己的表达</p>
+<p class="offline-lyric">管你什么看法</p>
+<p class="offline-lyric">我的世界我来浮夸</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我管你说得多复杂</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">我不要被谁给教化</p>
+<p class="offline-lyric">管你什么说法</p>
+<p class="offline-lyric">当我是傻或是笑话</p>
+<p class="offline-lyric">管你什么办法</p>
+<p class="offline-lyric">别幻想我沦落倒下</p>
+<p class="offline-lyric">噢～噢～噢～</p>
+<p class="offline-lyric">噢～噢～噢～</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>04:13</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-care">下一项 · 《我管你》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-care"><p class="offline-meta">唱完《我管你》后讲</p><h2>《我管你》后串词</h2>
+<p class="script-paragraph">谢谢大家！</p>
+<p class="script-paragraph">华晨宇的《我管你》。这一首唱完，很痛快。</p>
+<p class="script-paragraph">接下来我们把声音放轻一点，从摇滚换到一首有民谣气质的歌——《阿楚姑娘》。</p>
+<p class="script-paragraph">这首歌的原唱是梁凡，后来也有很多不同的演绎。今天，来听听 Suri 的版本。</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-achu">下一项 · 阿楚姑娘 ↓</a></nav></article>
+<article class="offline-item" id="offline-achu"><p class="offline-meta">梁凡</p><h2>阿楚姑娘</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 <time>00:26</time></h3>
+<p class="offline-lyric">在距离城市很远的地方</p>
+<p class="offline-lyric">在我那沃野炊烟的故乡</p>
+<p class="offline-lyric">有一个叫烽火台的村庄</p>
+<p class="offline-lyric">我曾和一个叫阿楚的姑娘</p>
+<p class="offline-lyric">彼此相依一起看月亮</p>
+<p class="offline-lyric">嗅着那桂花淡淡的香</p>
+<p class="offline-lyric">那夜的月光仍在天空发亮</p>
+<p class="offline-lyric">今夜它却格外得让人心伤</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:09</time></h3>
+<p class="offline-lyric">阿楚姑娘</p>
+<p class="offline-lyric">乡村的风里弥漫你的香</p>
+<p class="offline-lyric">风吻过的口红欲盖弥彰</p>
+<p class="offline-lyric">阿楚姑娘</p>
+<p class="offline-lyric">时间的泪眼撕去我伪装</p>
+<p class="offline-lyric">你可记得我年少的模样</p>
+<p class="offline-lyric">今夜你会不会在远方</p>
+<p class="offline-lyric">燃篝火为我守望</p></section>
+<section class="offline-stanza"><h3>间奏 <time>01:48</time></h3>
+</section>
+<section class="offline-stanza"><h3>副歌 2 <time>02:27</time></h3>
+<p class="offline-lyric">阿楚姑娘</p>
+<p class="offline-lyric">乡村的风里弥漫你的香</p>
+<p class="offline-lyric">风吻过的口红欲盖弥彰</p>
+<p class="offline-lyric">阿楚姑娘</p>
+<p class="offline-lyric">时间的泪眼撕去我伪装</p>
+<p class="offline-lyric">你可记得我年少的模样</p>
+<p class="offline-lyric">今夜你会不会在远方</p>
+<p class="offline-lyric">燃篝火为我守望</p></section>
+<section class="offline-stanza"><h3>桥段 <time>03:08</time></h3>
+<p class="offline-lyric">温柔的晚风啊</p>
+<p class="offline-lyric">请你带走我的惆怅吧</p>
+<p class="offline-lyric">别让我追随不可遗弃的彷徨</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:22</time></h3>
+<p class="offline-lyric">阿楚姑娘</p>
+<p class="offline-lyric">此时此刻你身在何方</p>
+<p class="offline-lyric">你可记得我年少的模样</p>
+<p class="offline-lyric">今夜你会不会在远方</p>
+<p class="offline-lyric">燃篝火为我守望</p></section>
+<section class="offline-stanza"><h3>尾句 <time>03:49</time></h3>
+<p class="offline-lyric">今夜你会不会在远方</p>
+<p class="offline-lyric">为我守望 守望</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-crescent">下一项 · 月牙湾 ↓</a></nav></article>
+<article class="offline-item" id="offline-crescent"><p class="offline-meta">F.I.R. 飞儿乐团</p><h2>月牙湾</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:41</time></h3>
+<p class="offline-lyric">敦煌天空的沙粒</p>
+<p class="offline-lyric">带着我们的记忆</p>
+<p class="offline-lyric">我从半路看回去</p>
+<p class="offline-lyric">这秦关漫漫好蜿踞</p>
+<p class="offline-lyric">梦想穿过了西域</p>
+<p class="offline-lyric">包含了多少的禅意</p>
+<p class="offline-lyric">爱情像一本游记</p>
+<p class="offline-lyric">我会找寻它的密语</p></section>
+<section class="offline-stanza"><h3>预副歌 1 <time>01:03</time></h3>
+<p class="offline-lyric">看月牙湾下的泪光</p>
+<p class="offline-lyric">在丝路之上被遗忘</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>01:12</time></h3>
+<p class="offline-lyric">是谁的心啊 孤单地留下</p>
+<p class="offline-lyric">他还好吗 我多想爱他</p>
+<p class="offline-lyric">那永恒的泪 凝固那一句话</p>
+<p class="offline-lyric">也许可能蒸发</p></section>
+<section class="offline-stanza"><h3>副歌 1 续段 <time>01:34</time></h3>
+<p class="offline-lyric">是谁的爱啊 比泪水坚强</p>
+<p class="offline-lyric">轻声呼唤 就让我融化</p>
+<p class="offline-lyric">每一滴雨水 演化成我翅膀</p>
+<p class="offline-lyric">向着我爱的人 追吧</p></section>
+<section class="offline-stanza"><h3>间奏 1 <time>02:01</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 2 <time>02:21</time></h3>
+<p class="offline-lyric">梦想穿过了西域</p>
+<p class="offline-lyric">包含了多少的禅意</p>
+<p class="offline-lyric">爱情像一本游记</p>
+<p class="offline-lyric">我会找寻它的密语</p></section>
+<section class="offline-stanza"><h3>预副歌 2 <time>02:31</time></h3>
+<p class="offline-lyric">看月牙湾下的泪光</p>
+<p class="offline-lyric">在丝路之上被遗忘</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>02:41</time></h3>
+<p class="offline-lyric">是谁的心啊 孤单地留下</p>
+<p class="offline-lyric">他还好吗 我多想爱他</p>
+<p class="offline-lyric">那永恒的泪 凝固那一句话</p>
+<p class="offline-lyric">也许可能蒸发</p></section>
+<section class="offline-stanza"><h3>副歌 2 续段 <time>03:03</time></h3>
+<p class="offline-lyric">是谁的爱啊 比泪水坚强</p>
+<p class="offline-lyric">轻声呼唤 就让我融化</p>
+<p class="offline-lyric">每一滴雨水 演化成我翅膀</p>
+<p class="offline-lyric">向着我爱的人 追吧</p></section>
+<section class="offline-stanza"><h3>间奏 2 <time>03:28</time></h3>
+</section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:47</time></h3>
+<p class="offline-lyric">是谁的心啊 孤单地留下</p>
+<p class="offline-lyric">他还好吗 我多想爱他</p>
+<p class="offline-lyric">那永恒的泪 凝固那一句话</p>
+<p class="offline-lyric">也许可能蒸发</p></section>
+<section class="offline-stanza"><h3>末段副歌续段 <time>04:09</time></h3>
+<p class="offline-lyric">是谁的爱啊 比泪水坚强</p>
+<p class="offline-lyric">轻声呼唤 就让我融化</p>
+<p class="offline-lyric">每一滴雨水 演化成我翅膀</p>
+<p class="offline-lyric">向着我爱的人 追吧</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>04:37</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-birds-intro">下一项 · 《鸟毛》前奏串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-birds-intro"><p class="offline-meta">《BIRDS OF A FEATHER》前奏响起时讲</p><h2>《鸟毛》前奏串词</h2>
+<p class="script-direction">（《BIRDS OF A FEATHER》 前奏响起，乐手每两节依次加入）</p>
+<p class="script-paragraph">感谢大家，最后一首是来自Billie Eillish的《BIRDS OF A FEATHER》</p>
+<p class="script-paragraph">这是一首非常温暖的歌曲 作为收场曲目 希望大家喜欢</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-birds">下一项 · 鸟毛（BIRDS OF A FEATHER） ↓</a></nav></article>
+<article class="offline-item" id="offline-birds"><p class="offline-meta">Billie Eilish</p><h2>鸟毛（BIRDS OF A FEATHER）</h2>
+<section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
+</section>
+<section class="offline-stanza"><h3>主歌 1 <time>00:03</time></h3>
+<p class="offline-lyric">I want you to stay</p>
+<p class="offline-lyric">&#39;Til I&#39;m in the grave</p>
+<p class="offline-lyric">&#39;Til I rot away, dead and buried</p>
+<p class="offline-lyric">&#39;Til I&#39;m in the casket you carry</p>
+<p class="offline-lyric">If you go, I&#39;m goin&#39; too, uh</p>
+<p class="offline-lyric">&#39;Cause it was always you (Alright)</p>
+<p class="offline-lyric">And if I&#39;m turnin&#39; blue, please don&#39;t save me</p>
+<p class="offline-lyric">Nothin&#39; left to lose without my baby</p></section>
+<section class="offline-stanza"><h3>副歌 1 <time>00:42</time></h3>
+<p class="offline-lyric">Birds of a feather, we should stick together, I know</p>
+<p class="offline-lyric">I said I&#39;d never think I wasn&#39;t better alone</p>
+<p class="offline-lyric">Can&#39;t change the weather, might not be forever</p>
+<p class="offline-lyric">But if it&#39;s forever, it&#39;s even better</p></section>
+<section class="offline-stanza"><h3>过渡 1 <time>01:00</time></h3>
+<p class="offline-lyric">And I don&#39;t know what I&#39;m cryin&#39; for</p>
+<p class="offline-lyric">I don&#39;t think I could love you more</p>
+<p class="offline-lyric">It might not be long, but baby, I</p></section>
+<section class="offline-stanza"><h3>副歌后段 <time>01:15</time></h3>
+<p class="offline-lyric">I&#39;ll love you &#39;til the day that I die</p>
+<p class="offline-lyric">&#39;Til the day that I die</p>
+<p class="offline-lyric">&#39;Til the light leaves my eyes</p>
+<p class="offline-lyric">&#39;Til the day that I die</p></section>
+<section class="offline-stanza"><h3>主歌 2 <time>01:35</time></h3>
+<p class="offline-lyric">I want you to see, hmm</p>
+<p class="offline-lyric">How you look to me, hmm</p>
+<p class="offline-lyric">You wouldn&#39;t believe if I told ya</p>
+<p class="offline-lyric">You would keep the compliments I throw ya</p>
+<p class="offline-lyric">But you&#39;re so full of shit, uh</p>
+<p class="offline-lyric">Tell me it&#39;s a bit, oh</p>
+<p class="offline-lyric">Say you don&#39;t see it, your mind&#39;s polluted</p>
+<p class="offline-lyric">Say you wanna quit, don&#39;t be stupid</p></section>
+<section class="offline-stanza"><h3>过渡 2 <time>02:13</time></h3>
+<p class="offline-lyric">And I don&#39;t know what I&#39;m cryin&#39; for</p>
+<p class="offline-lyric">I don&#39;t think I could love you more</p>
+<p class="offline-lyric">Might not be long, but baby, I</p>
+<p class="offline-lyric">Don&#39;t wanna say goodbye</p></section>
+<section class="offline-stanza"><h3>副歌 2 <time>02:31</time></h3>
+<p class="offline-lyric">Birds of a feather, we should stick together, I know (&#39;Til the day that I die)</p>
+<p class="offline-lyric">I said I&#39;d never think I wasn&#39;t better alone (&#39;Til the light leaves my eyes)</p>
+<p class="offline-lyric">Can&#39;t change the weather, might not be forever (&#39;Til the day that I die)</p>
+<p class="offline-lyric">But if it&#39;s forever, it&#39;s even better</p></section>
+<section class="offline-stanza"><h3>尾段人声 <time>02:50</time></h3>
+<p class="offline-lyric">I knew you in another life</p>
+<p class="offline-lyric">You had that same look in your eyes</p>
+<p class="offline-lyric">I love you, don&#39;t act so surprised</p></section>
+<section class="offline-stanza"><h3>尾奏 <time>03:08</time></h3>
+</section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-birds-close">下一项 · 结束致谢 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-birds-close"><p class="offline-meta">《BIRDS OF A FEATHER》唱段结束后讲</p><h2>结束致谢</h2>
+<p class="script-direction">唱段结束，我接着说：</p>
+<p class="script-paragraph">非常感谢大家今天的到来，你们的聆听 就是对我们最大的肯定</p>
+<p class="script-paragraph">其实今天对我们乐队来说是圆梦一般的存在，谢谢你们帮我们圆梦，也希望你们每个人遇到的所有风雨都会化作彩虹，所有美梦都能成真，谢谢！！！！</p>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a></nav></article>
+<nav id="offline-setlist" class="offline-index" aria-label="演出歌单"><h2>演出歌单</h2><ol>
+<li><a href="#offline-north">01 一路向北</a></li>
+<li class="offline-script-link"><a href="#offline-mc-north">《一路向北》后串词</a></li>
+<li><a href="#offline-dear-john">02 Dear John</a></li>
+<li><a href="#offline-black-tangerine">03 黑色柳丁</a></li>
+<li><a href="#offline-regular-friends">04 普通朋友</a></li>
+<li class="offline-script-link"><a href="#offline-mc-friends">《普通朋友》后串词</a></li>
+<li><a href="#offline-bubble">05 泡沫</a></li>
+<li><a href="#offline-wrong-love">06 爱错</a></li>
+<li class="offline-script-link"><a href="#offline-mc-love">《爱错》后串词</a></li>
+<li class="offline-interlude">猜歌互动</li>
+<li><a href="#offline-remember">07 我怀念的</a></li>
+<li><a href="#offline-expose">08 拆穿</a></li>
+<li class="offline-script-link"><a href="#offline-mc-expose">《拆穿》后串词</a></li>
+<li><a href="#offline-surfer">09 浪人的…</a></li>
+<li><a href="#offline-i-dont-care">10 我管你</a></li>
+<li class="offline-script-link"><a href="#offline-mc-care">《我管你》后串词</a></li>
+<li><a href="#offline-achu">11 阿楚姑娘</a></li>
+<li><a href="#offline-crescent">12 月牙湾</a></li>
+<li class="offline-script-link"><a href="#offline-mc-birds-intro">《鸟毛》前奏串词</a></li>
+<li><a href="#offline-birds">13 鸟毛（BIRDS OF A FEATHER）</a></li>
+<li class="offline-script-link"><a href="#offline-mc-birds-close">结束致谢</a></li>
+</ol></nav>
+</main>
+<div class="shell" hidden>
+  <div class="rail-shade" id="rail-shade" aria-hidden="true"></div>
+  <aside class="rail" id="rail" aria-labelledby="set-heading">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <div><strong>Weekend Band</strong><small>舞台提词器</small></div>
+      <button class="rail-close" id="close-setlist" aria-label="关闭歌单">×</button>
+    </div>
+    <div class="set-heading"><h2 id="set-heading">演出歌单</h2><span>13 首</span></div>
+    <ol class="setlist" id="setlist"></ol>
+  </aside>
+  <main class="stage" id="stage">
+    <header class="toolbar" id="toolbar">
+      <div class="toolbar-start">
+        <button class="rail-open" id="open-setlist" aria-expanded="false" aria-controls="rail">歌单</button>
+        <span class="toolbar-title">舞台提词</span>
+      </div>
+      <div class="toolbar-end">
+        <div class="font-control" role="group" aria-label="歌词字号">
+          <button id="smaller" aria-label="缩小歌词字号">A−</button>
+          <output id="font-size" aria-label="当前字号">38</output>
+          <button id="larger" aria-label="放大歌词字号">A+</button>
+        </div>
+        <button id="import-open">导入歌词</button>
+      </div>
+    </header>
+    <article class="score" id="score">
+      <div class="song-meta"><span id="track-number"></span><span id="track-artist"></span><span class="content-mode" id="source-mode">原版段落</span></div>
+      <h1 id="track-title" tabindex="-1">一路向北</h1>
+      <p class="source-note" id="source-note">导入歌词后可显示完整的排练正文。</p>
+      <div class="source-links" id="source-links">
+        <a id="lyric-source" target="_blank" rel="noopener">查看原曲歌词</a>
+        <a id="timing-source" target="_blank" rel="noopener">段落时间参考</a>
+      </div>
+      <div class="sections" id="sections"></div>
+    </article>
+  </main>
+</div>
+<footer class="transport" id="transport" aria-label="提词控制" hidden>
+  <div class="timeline" id="timeline">
+    <input id="seek" type="range" min="0" max="294" value="0" step="any" aria-label="跳到歌曲时间">
+    <output id="clock" for="seek">00:00 / 04:54</output>
+  </div>
+  <div class="song-transport" id="song-transport">
+  <div class="read-position"><strong id="position">前奏</strong><small id="mode">手动滑动</small></div>
+  <div class="transport-group">
+    <button id="previous" aria-label="上一段">↑ 上一段</button>
+    <button id="next" aria-label="下一段">↓ 下一段</button>
+  </div>
+  <div class="transport-group">
+    <select id="pace" class="pace" aria-label="慢滚速度">
+      <option value="0.8">0.80×</option>
+      <option value="0.9">0.90×</option>
+      <option value="1" selected>1.00×</option>
+      <option value="1.1">1.10×</option>
+      <option value="1.2">1.20×</option>
+    </select>
+    <button class="play" id="play" aria-pressed="false">开始慢滚</button>
+  </div>
+  </div>
+  <nav class="show-nav" aria-label="演出流程">
+    <button id="show-previous" type="button">← 上一项</button>
+    <button id="show-next" class="show-next" type="button">下一项 →</button>
+  </nav>
+</footer>
+<dialog id="import-dialog" aria-labelledby="import-title">
+  <form id="import-form">
+    <div class="dialog-title"><h2 id="import-title">导入《一路向北》歌词</h2><button type="button" id="import-close" aria-label="关闭">×</button></div>
+    <p id="import-help">粘贴歌词或选择 .lrc / .txt 文件。空一行可分段，也可以写【主歌】或【副歌】作段名。LRC 可以按时间滚动，纯文本可以手动或匀速滚动。你在这里更新的版本只留在当前浏览器。</p>
+    <textarea id="lyric-input" aria-label="歌词内容" aria-describedby="import-help" placeholder="[00:18.00]【主歌】&#10;[00:18.00]你的第一行歌词"></textarea>
+    <div class="file-row"><input id="lyric-file" type="file" accept=".lrc,.txt,text/plain" aria-label="选择歌词文件"></div>
+    <p id="import-message" role="status" hidden></p>
+    <div class="dialog-actions"><button type="button" id="restore">恢复本场歌词</button><button class="play" type="submit">应用歌词</button></div>
+    <div class="bulk-import">
+      <p class="file-caption" id="bulk-help">批量导入时，用歌名或「歌手 - 歌名」给文件命名。</p>
+      <input id="bulk-file" type="file" multiple accept=".lrc,.txt,text/plain" aria-label="批量导入歌词" aria-describedby="bulk-help">
+    </div>
+  </form>
+</dialog>
+<script>
+function parseLyricText(input) {
+  const timestamp = /^\[(\d+):([0-5]?\d)(?:[.:](\d{1,3}))?\]\s*/;
+  const metadata = /^\[[a-z][\w-]*\s*:[^\]]*\]$/i;
+  const sectionName = /^(?:(?:前奏|主歌|副歌|预副歌|间奏|桥段|尾奏|尾声|结束|verse|pre[- ]?chorus|chorus|bridge|intro|interlude|outro|instrumental|hook)(?:\b|[\s\d一二三四五六七八九十：:·-]|$)|第[一二三四五六七八九十\d]+段)/i;
+  const credit = /^(?:词|作词|曲|作曲|编曲|制作人|和声编写|合声|和声|吉他|贝斯|鼓|录音工程|混音|OP|SP)\s*[:：]/i;
+  const chunks = [];
+  let chunk = { title: '', start: null, entries: [] };
+
+  function startSection(title = '', start = null) {
+    if (chunk.entries.length || (chunk.title && chunk.start !== null)) chunks.push(chunk);
+    chunk = { title, start, entries: [] };
+  }
+
+  for (const rawLine of String(input ?? '').replace(/^\uFEFF/, '').split(/\r\n?|\n/)) {
+    let line = rawLine.trim();
+    if (metadata.test(line)) continue;
+
+    const starts = [];
+    for (let match = timestamp.exec(line); match; match = timestamp.exec(line)) {
+      const [, minutes, seconds, fraction] = match;
+      starts.push(Number(minutes) * 60 + Number(seconds) + Number(`0.${fraction || '0'}`));
+      line = line.slice(match[0].length);
+    }
+    line = line.replace(/<\d+:[0-5]?\d(?:[.:]\d{1,3})?>/g, '').trim();
+
+    if (credit.test(line)) continue;
+
+    const squareLabel = /^\[([^\[\]]+)\]$/.exec(line)?.[1]?.trim();
+    const cornerLabel = /^【([^【】]+)】$/.exec(line)?.[1]?.trim();
+    const title = cornerLabel || (squareLabel && sectionName.test(squareLabel) ? squareLabel : '');
+    if (title) {
+      startSection(title, starts[0] ?? null);
+    } else if (!line) {
+      if (chunk.entries.length || (starts.length && !chunk.title)) startSection();
+    } else if (starts.length) {
+      for (const start of starts) chunk.entries.push({ line, start });
+    } else {
+      chunk.entries.push({ line, start: null });
+    }
+  }
+  if (chunk.entries.length || (chunk.title && chunk.start !== null)) chunks.push(chunk);
+
+  const labeled = chunks.some(({ title }) => title);
+  const explicitSections = chunks.length > 1 || labeled;
+  const sections = [];
+  for (const { title, start, entries } of chunks) {
+    const allTimed = entries.every((entry) => entry.start !== null);
+    if (allTimed) entries.sort((first, second) => first.start - second.start);
+
+    let section = { title: title || `第 ${sections.length + 1} 段`, lines: [], start: start ?? entries[0]?.start ?? null,
+      instrumental: !entries.length && /^(?:前奏|间奏|尾奏)/.test(title)
+    };
+    let previousStart = null;
+    for (const entry of entries) {
+      const needsTimedBreak = previousStart !== null && entry.start > previousStart &&
+        (entry.start - previousStart >= 14 || section.lines.length >= 7);
+      if (!explicitSections && needsTimedBreak) {
+        sections.push(section);
+        section = { title: `第 ${sections.length + 1} 段`, lines: [], start: entry.start };
+      }
+      section.lines.push(entry.line);
+      previousStart = entry.start;
+    }
+    sections.push(section);
+  }
+
+  const entries = chunks.flatMap((part) => part.entries).sort((first, second) => first.start - second.start);
+  return { sections, entries, labeled };
+}
+function referenceTrack(id, title, artist, version, duration, lyrics, timing, cues, options = {}) {
+  return {
+    id, title, artist, version, duration, lyrics, timing,
+    aliases: options.aliases ?? [],
+    stage: options.stage,
+    sections: cues.map(([start, title, note, excerpt]) => ({
+      start, title, note,
+      instrumental: /^(?:前奏|间奏|尾奏)/.test(title),
+      lines: excerpt ? [excerpt] : []
+    }))
+  };
+}
+
+const tracks = [
+  referenceTrack('north', '一路向北', '周杰伦', '《11月的萧邦》录音室版', 294,
+    'https://music-tw.line.me/track/1018296012',
+    'https://zh.followlyrics.com/lyrics/99436/yi-lu-xiang-bei',
+    [
+      [0, '前奏', '准备进主歌'], [35.090, '主歌 1', '', '后视镜里的世界'], [63.790, '预副歌 1'],
+      [89.749, '副歌 1'], [118, '间奏', '等第二遍主歌'], [138.710, '主歌 2'],
+      [168.680, '预副歌 2'], [195, '副歌 2'], [223.010, '末段副歌'], [261.670, '尾奏']
+    ], { aliases: ['All the Way North'], stage: '现场 JoJo · F 调' }),
+
+  referenceTrack('dear-john', 'Dear John', '比莉', '《傻瓜就是我》录音室版', 311,
+    'https://www.kugou.com/song-36/dn696d.html',
+    'https://www.kugou.com/song-36/dn696d.html',
+    [
+      [0, '前奏'], [14.10, '主歌 1'], [27.40, '主歌续段 1'], [44.44, '副歌 1'], [84.12, '主歌 2'],
+      [97.39, '主歌续段 2'], [114.52, '副歌 2'], [147.93, '桥段'], [201.21, '末段副歌'],
+      [227.02, '尾段人声'], [253, '尾奏', '尾奏起点为约数']
+    ]),
+
+  referenceTrack('black-tangerine', '黑色柳丁', '陶喆', '《黑色柳丁》录音室版', 257,
+    'https://music-tw.line.me/track/1000323001',
+    'https://zh.followlyrics.com/lyrics/71183/hei-se-liu-ding',
+    [
+      [0, '前奏'], [17.52, '主歌 1'], [49.65, '预副歌 1'], [80.14, '副歌 1'], [112.58, '副歌尾句 1'],
+      [125.44, '主歌 2'], [157.70, '预副歌 2'], [187.90, '副歌 2'], [219.20, '副歌尾句 2'],
+      [233.70, '尾声'], [248.60, '结尾反复']
+    ]),
+
+  referenceTrack('regular-friends', '普通朋友', '陶喆', '《I’m O.K.》录音室版', 255,
+    'https://music-tw.line.me/track/1000324005',
+    'https://www.5nd.com/gecilrc/49918.htm',
+    [
+      [0, '前奏'], [19, '主歌 1'], [41, '主歌续段 1'], [62, '预副歌 1'],
+      [86, '副歌 1'], [135, '主歌 2'], [157, '预副歌 2'], [181, '副歌 2'], [231, '尾声']
+    ]),
+
+  referenceTrack('bubble', '泡沫', 'G.E.M. 邓紫棋', '《Xposed》录音室版', 258,
+    'https://music.bugs.co.kr/track/2924780',
+    'https://zh.followlyrics.com/lyrics/140445/pao-mo/amp',
+    [
+      [0, '主歌 1'], [28.12, '副歌 1'], [57.53, '主歌 2'], [84.50, '副歌 2'], [112.93, '副歌变化'],
+      [141.19, '桥段'], [166.10, '末段副歌'], [195.27, '副歌延续'], [224.73, '尾段人声'], [250.90, '尾奏']
+    ]),
+
+  referenceTrack('wrong-love', '爱错', '王力宏', '《心中的日月》录音室版', 239,
+    'https://music-tw.line.me/track/7165348010',
+    'https://zh.followlyrics.com/lyrics/3134586/ai-cuo',
+    [
+      [0, '前奏'], [13.24, '主歌 1'], [45.01, '副歌 1'], [79.05, '主歌 2'],
+      [110.71, '副歌 2'], [141.83, '桥段'], [163.21, '副歌 3'], [189.24, '末段副歌']
+    ], { aliases: ['愛錯'] }),
+
+  referenceTrack('remember', '我怀念的', '孙燕姿', '《逆光》录音室版', 289,
+    'https://music-tw.line.me/track/1018277005',
+    'https://www.kugou.com/song-36/63xh8a.html',
+    [
+      [0, '前奏'], [16.76, '主歌 1'], [46.03, '预副歌 1'], [74.23, '副歌 1'], [116.43, '预副歌 2'],
+      [144.23, '副歌 2'], [171.68, '副歌变化'], [197.35, '桥段'], [236.69, '末段副歌'], [255.30, '尾段人声']
+    ], { aliases: ['我懷念的'] }),
+
+  referenceTrack('expose', '拆穿', '周菲戈', '暂按《中国好声音》周菲戈现场版', 210,
+    'https://music-tw.line.me/track/1259679002',
+    'https://www.gequbao.com/music/733028',
+    [
+      [0, '前奏'], [8.39, '主歌'], [40.53, '预副歌 1'], [72.31, '副歌 1'], [104, '间奏', '间奏起点为约数'],
+      [121.56, '预副歌 2'], [153.69, '副歌 2'], [187, '尾奏', '尾奏起点为约数']
+    ], { aliases: ['拆穿 Live', '拆穿（现场）'] }),
+
+  referenceTrack('surfer', '浪人的…', '张震岳', '《跟着感觉走》录音室版', 245,
+    'https://music-tw.line.me/track/7691813001',
+    'https://www.yueting.net/song/883970.html',
+    [
+      [0, '前奏'], [27, '主歌 1'], [47, '主歌 2'], [66, '预副歌 1'], [85, '副歌 1'],
+      [130, '预副歌 2'], [149, '副歌 2'], [188, '末段副歌'], [225, '尾句'], [230, '尾奏', '尾奏起点为约数']
+    ]),
+
+  referenceTrack('i-dont-care', '我管你', '华晨宇', '《异类》录音室版', 266,
+    'https://music-tw.line.me/track/5981593001',
+    'https://www.hifiti.com/thread-68116.htm',
+    [
+      [0, '前奏'], [11.10, '主歌 1'], [53.40, '预副歌'], [74.73, '呼应段 1'], [97.20, '副歌 1'],
+      [139.61, '桥段'], [160.94, '呼应段 2'], [183.30, '主歌 2'], [214.64, '末段副歌'], [253, '尾奏']
+    ]),
+
+  referenceTrack('achu', '阿楚姑娘', '梁凡', '暂按梁凡十周年纪念版', 273,
+    'https://5sing.kugou.com/yc/3061918.html',
+    'https://www.gequbao.com/music/16254319',
+    [
+      [0, '前奏'], [26.46, '主歌'], [68.54, '副歌 1'], [108, '间奏', '间奏起点为约数'],
+      [146.81, '副歌 2'], [187.83, '桥段'], [201.62, '末段副歌'], [228.93, '尾句']
+    ]),
+
+  referenceTrack('crescent', '月牙湾', 'F.I.R. 飞儿乐团', '《爱·歌姬》录音室版', 308,
+    'https://music-tw.line.me/track/1019080007',
+    'https://zh.followlyrics.com/lyrics/239903/yue-ya-wan',
+    [
+      [0, '前奏'], [41.29, '主歌 1'], [63.26, '预副歌 1'], [72.49, '副歌 1'], [120.58, '间奏 1'],
+      [140.52, '主歌 2'], [151.39, '预副歌 2'], [160.86, '副歌 2'], [208.41, '间奏 2'],
+      [226.89, '末段副歌'], [276.57, '尾奏']
+    ], { aliases: ['月牙灣'] }),
+
+  referenceTrack('birds', '鸟毛（BIRDS OF A FEATHER）', 'Billie Eilish', '《HIT ME HARD AND SOFT》录音室版', 210,
+    'https://music.apple.com/us/song/1739659142',
+    'https://www.lyricdown.com/lrc/billie-eilish-birds-of-a-feather-9181702',
+    [
+      [0, '主歌 1', '人声约 0:03 进入'], [41.59, '副歌 1'], [59.58, '过渡 1'], [74.95, '副歌后段'],
+      [95.08, '主歌 2'], [133.09, '过渡 2'], [151.29, '副歌 2'], [170, '尾段人声'],
+      [188.09, '尾奏', '尾奏起点为约数']
+    ], { aliases: ['BIRDS OF A FEATHER', '鸟毛', '鳥毛'] })
+];
+
+const bundledLyrics = {
+  "north": "[00:00.000]【前奏】\n\n[00:35.090]【主歌 1】\n[00:35.090]后视镜里的世界 越来越远的道别\n[00:46.519]你转身向背 侧脸还是很美\n[00:53.359]我用眼光去追 竟听见你的泪\n\n[01:03.790]【预副歌 1】\n[01:03.790]在车窗外面徘徊 是我错失的机会\n[01:15.519]你站的方位 跟我中间隔着泪\n[01:21.308]街景一直在后退 你的崩溃在窗外零碎\n\n[01:29.749]【副歌 1】\n[01:29.749]我一路向北 离开有你的季节\n[01:37.188]你说你好累 已无法再爱上谁\n[01:43.769]风在山路吹 过往的画面全都是我不对\n[01:51.869]细数惭愧 我伤你几回\n\n[01:58.000]【间奏】\n\n[02:18.710]【主歌 2】\n[02:18.710]后视镜里的世界 越来越远的道别\n[02:30.400]你转身向背 侧脸还是很美\n[02:36.800]我用眼光去追 竟听见你的泪\n\n[02:48.680]【预副歌 2】\n[02:48.680]在车窗外面徘徊 是我错失的机会\n[03:00.500]你站的方位 跟我中间隔着泪\n[03:07.120]街景一直在后退 你的崩溃在窗外零碎\n\n[03:15.000]【副歌 2】\n[03:15.000]我一路向北 离开有你的季节\n[03:22.440]你说你好累 已无法再爱上谁\n[03:29.430]风在山路吹 过往的画面全都是我不对\n[03:37.630]细数惭愧 我伤你几回\n\n[03:43.010]【末段副歌】\n[03:43.010]我一路向北 离开有你的季节\n[03:50.190]方向盘周围 回转着我的后悔\n[03:57.340]我加速超越 却甩不掉紧紧跟随的伤悲\n[04:05.880]细数惭愧 我伤你几回\n[04:13.670]停止狼狈 就让错纯粹\n\n[04:21.670]【尾奏】",
+  "dear-john": "[00:00.000]【前奏】\n\n[00:14.090]【主歌 1】\n[00:14.090]关上门 一个人 行李上车\n[00:17.280]将心情 化妆成 初恋的快乐\n[00:20.710]我要我 为自己 找回自我 找到些什么\n\n[00:27.390]【主歌续段 1】\n[00:27.390]铃声响 dear John 在电话那头\n[00:30.600]你说话 很温柔 像一颗石头\n[00:34.020]坚定的 镇住我 心头波涛 我想泪流\n[00:39.220]原来 爱没有 遗弃我\n\n[00:44.430]【副歌 1】\n[00:44.430]你的爱会将我灌醉\n[00:48.240]我没有所谓\n[00:51.500]太过清醒怎么陶醉\n[00:55.950]你的爱\n[00:57.750]像是杯太浓的咖啡\n[01:01.520]让我失眠彻夜\n[01:04.810]好爱这种感觉\n\n[01:10.000]【间奏 1】\n\n[01:24.120]【主歌 2】\n[01:24.120]关上门 一个人 行李上车\n[01:27.290]将心情 化妆成 初恋的快乐\n[01:30.730]我要我 为自己 找回自我 找到些什么\n\n[01:37.390]【主歌续段 2】\n[01:37.390]铃声响 dear John 在电话那头\n[01:40.650]你说话 很温柔 像一颗石头\n[01:44.060]坚定的 镇住我 心头波涛 我想泪流\n[01:49.140]原来\n[01:50.290]爱没有 遗弃我\n\n[01:54.520]【副歌 2】\n[01:54.520]你的爱会将我灌醉\n[01:58.250]我没有所谓\n[02:01.530]太过清醒怎么陶醉\n[02:05.960]你的爱\n[02:07.810]像是杯太浓的咖啡\n[02:11.530]让我失眠彻夜\n[02:14.910]好爱这种感觉\n\n[02:27.930]【桥段】\n[02:27.930]每一次恋爱过程很像是赌注\n[02:34.150]付出全部拿回什么不清楚\n[02:40.880]也许爱过至少学会找到感动或知足\n[02:47.450]难说当爱落幕赢或输\n\n[02:54.000]【间奏 2】\n\n[03:21.200]【末段副歌】\n[03:21.200]你的爱会将我灌醉\n[03:24.940]我没有所谓\n[03:28.240]太过清醒怎么陶醉\n[03:32.630]你的爱\n[03:34.500]像是杯太浓的咖啡\n[03:38.270]让我失眠彻夜\n[03:41.520]好爱这种感觉 my love\n\n[03:47.020]【尾段人声】\n[03:47.020]Baby baby baby 不想牵挂\n[03:51.560]心就要起飞 到那充满可能的国界\n[04:00.160]Baby baby baby 我是你的\n[04:04.930]你是我的就够了\n[04:09.150]别想那么多\n\n[04:13.000]【尾奏】",
+  "black-tangerine": "[00:00.000]【前奏】\n\n[00:17.520]【主歌 1】\n[00:17.520]今天我心情有一点怪怪\n[00:22.350]可是说不出到底为什么\n[00:25.540]好像有一些悲伤的征兆\n[00:29.360]可是病因不知道\n[00:33.898]头上有橘色的加州阳光\n[00:36.847]我的口袋只有黑色的柳丁\n[00:39.847]我只有一个蓝色的感觉\n[00:44.127]不要问我为什么\n\n[00:49.647]【预副歌 1】\n[00:49.647]很想说 但又觉得没有话好说\n[00:57.157]我只恨我自己 逃不出这监狱\n[01:04.570]或许我 是个没有出息的小虫\n[01:11.937]不该一直作梦 你不是个英雄\n\n[01:20.137]【副歌 1】\n[01:20.137]叶子用坠落证明换季\n[01:23.858]可我昏昏沉沉没有办法醒\n[01:29.480]你愿意做个英雄\n[01:32.167]还是你会要放弃\n[01:35.407]天是亮的却布满乌云\n[01:39.489]所有焦距被闪光判了死刑\n[01:43.870]你想做什么英雄\n[01:47.369]我看你不过是佣兵\n\n[01:52.580]【副歌尾句 1】\n[01:52.580]我只想哭 只想哭 只想哭\n[01:55.280]我只想哭 只想哭 只想哭\n\n[02:05.437]【主歌 2】\n[02:05.437]今天一起床我就头痛\n[02:10.590]不管吃了几瓶药都没有用\n[02:12.789]心情有一点莫名的焦躁\n[02:17.500]你离我越远越好\n[02:20.240]外面有橘色的加州阳光\n[02:24.400]我却躲在自己孤独的黑洞\n[02:27.900]我只有一个小小的要求\n[02:31.770]就是请你leave me alone\n\n[02:37.700]【预副歌 2】\n[02:37.700]很想说 但又觉得没有话好说\n[02:44.720]我只恨我自己 逃不出这监狱\n[02:52.390]或许我 是个没有出息的小虫\n[02:59.350]不该一直作梦 你不是个英雄\n\n[03:07.900]【副歌 2】\n[03:07.900]叶子用坠落证明换季\n[03:11.900]可我昏昏沉沉没有办法醒\n[03:16.900]你愿意做个英雄\n[03:20.200]还是你会要放弃\n[03:22.820]天是亮的却布满乌云\n[03:26.800]所有焦距被闪光判了死刑\n[03:31.080]你想做什么英雄\n[03:35.300]我看你不过是佣兵\n\n[03:39.200]【副歌尾句 2】\n[03:39.200]我只想哭 只想哭 只想哭\n[03:42.110]我只想哭 只想哭 只想哭\n\n[03:53.700]【尾声】\n[03:53.700]今天我心情有一点烂烂\n[03:57.600]可是说不出到底为什么\n[04:00.150]好像有一点悲哀的征兆\n[04:04.790]可是病因不知道\n\n[04:08.600]【结尾反复】\n[04:08.600]我只想哭 只想哭 只想哭\n[04:12.700]我只想哭 只想哭 只想哭",
+  "regular-friends": "[00:00.000]【前奏】\n\n[00:19.000]【主歌 1】\n[00:19.000]等待\n[00:22.000]我随时随地在等待\n[00:27.000]做你感情上的依赖\n[00:33.000]我没有任何的疑问\n[00:37.000]这是爱\n\n[00:41.000]【主歌续段 1】\n[00:41.000]我猜\n[00:43.000]你早就想要说明白\n[00:49.000]我觉得自己好失败\n[00:54.000]从天堂掉落到深渊\n[00:59.000]多无奈\n\n[01:02.000]【预副歌 1】\n[01:02.000]我愿意改变 (what can I do?)\n[01:08.000]重新再来一遍(just give me change)\n[01:14.000]我无法只是普通朋友\n[01:19.000]感情已那么深\n[01:21.000]叫我怎么能收手\n\n[01:26.000]【副歌 1】\n[01:26.000]但你说\n[01:29.000]I only want to be your friend\n[01:34.000]做个朋友\n[01:37.000]我在\n[01:40.000]你心中只是just a friend\n[01:45.000]不是情人\n[01:48.000]我感激你对我这样的坦白\n[01:53.000]但我给你的爱暂时收不回来\n[01:59.000]So I\n[02:03.000]我不能只是be your friend\n[02:09.000]I just can't be your friend\n\n[02:15.000]【主歌 2】\n[02:15.000]我猜\n[02:18.000]你早就想要说明白\n[02:23.000]我觉得自己好失败\n[02:29.000]从天堂掉落到深渊\n[02:33.000]多无奈\n\n[02:37.000]【预副歌 2】\n[02:37.000]我愿意改变 (what can I do?)\n[02:42.000]重新再来一遍(just give me change)\n[02:47.000]我无法只是普通朋友\n[02:53.000]感情已那么深\n[02:55.000]叫我怎么能收手\n\n[03:01.000]【副歌 2】\n[03:01.000]但你说\n[03:04.000]I only want to be your friend\n[03:08.000]做个朋友\n[03:12.000]我在\n[03:15.000]你心中只是just a friend\n[03:19.000]不是情人\n[03:23.000]我感激你对我这样的坦白\n[03:28.000]但我给你的爱暂时收不回来\n[03:33.000]So I\n[03:36.000]我不能只是be your friend\n[03:47.000]I just can't be your friend\n\n[03:51.000]【尾声】\n[03:51.000]no,no,no,\n[03:57.000]我不能只是做你的朋友\n[04:01.000]不能只是做普通朋友",
+  "bubble": "[00:00.000]【前奏】\n\n[00:00.809]【主歌 1】\n[00:00.809]阳光下的泡沫 是彩色的 就像被骗的我 是幸福的\n[00:17.640]追究什么对错 你的谎言 基于你还爱我\n\n[00:28.119]【副歌 1】\n[00:28.119]美丽的泡沫 虽然一刹花火 你所有承诺 虽然都太脆弱\n[00:42.080]但爱像泡沫 如果能够看破 有什么难过\n\n[00:57.530]【主歌 2】\n[00:57.530]早该知道泡沫 一触就破 就像已伤的心 不胜折磨\n[01:11.340]也不是谁的错 谎言再多 基于你还爱我\n\n[01:24.500]【副歌 2】\n[01:24.500]美丽的泡沫 虽然一刹花火 你所有承诺 虽然都太脆弱\n[01:39.100]爱本是泡沫 如果能够看破 有什么难过\n\n[01:52.929]【副歌变化】\n[01:52.929]再美的花朵 盛开过就凋落 再亮眼的星 一闪过就坠落\n[02:06.950]爱本是泡沫 如果能够看破 有什么难过\n\n[02:21.189]【桥段】\n[02:21.189]为什么难过 有什么难过 为什么难过\n\n[02:46.099]【末段副歌】\n[02:46.099]全都是泡沫 只一刹的花火 你所有承诺 全部都太脆弱\n[03:00.460]而你的轮廓 怪我没有看破 才如此难过\n\n[03:15.269]【副歌延续】\n[03:15.269]相爱的把握 要如何再搜索 相拥着寂寞 难道就不寂寞\n[03:29.720]爱本是泡沫 怪我没有看破 才如此难过\n\n[03:44.729]【尾段人声】\n[03:44.729]在雨下的泡沫 一触就破 当初炽热的心 早以沉没\n[03:58.840]说什么你爱我 如果骗我 我宁愿你沉默\n\n[04:10.900]【尾奏】",
+  "wrong-love": "[00:00.000]【前奏】\n\n[00:13.240]【主歌 1】\n[00:13.240]北风毫不留情\n[00:17.420]把叶子吹落\n[00:19.950]坠落的它选择了逃脱\n[00:26.460]叶子失去消息\n[00:29.530]风才感觉寂寞\n[00:35.530]整个冬天\n[00:38.860]北风的痛没人能说\n\n[00:45.010]【副歌 1】\n[00:45.010]我从来没想过\n[00:48.740]我会这样做\n[00:51.970]从来没爱过\n[00:55.300]所以爱错\n[00:58.120]我从哪里起飞\n[01:01.850]从哪里降落\n[01:05.180]多少不能原谅的错 却不能重来过\n\n[01:19.050]【主歌 2】\n[01:19.050]翻开回忆角落\n[01:23.240]完美的生活\n[01:25.710]以为幸福都可以掌握\n[01:32.260]仔细回味当初那个故事背后\n[01:40.880]喔 原来是我\n[01:44.570]犯下从没承认的错\n\n[01:50.710]【副歌 2】\n[01:50.710]我从来没想过\n[01:54.440]我会这样做\n[01:57.720]从来没爱过 所以爱错\n[02:03.870]我 从那里起飞\n[02:07.610]从那里降落\n[02:10.890]多少不能原谅的错却不能重来过\n\n[02:21.830]【桥段】\n[02:21.830]在这少了你的世界\n[02:26.780]喔 找不会那些感觉\n[02:33.130]其实我不想 道别\n[02:40.440]那些过去\n\n[02:43.210]【副歌 3】\n[02:43.210]我从来没想过\n[02:47.050]我会这样做\n[02:50.230]从来没爱过 （从来没有爱过那么认真）\n[02:57.990]我从那里起飞\n[03:00.160]从那里降落（降落）\n[03:04.240]多少不能原谅的错却不能重\n\n[03:09.240]【末段副歌】\n[03:09.240]我从来没想过\n[03:13.330]我会这样做\n[03:16.610]从来没爱过（爱过）\n[03:20.540]所以爱错（所以爱错）\n[03:23.310]从那里起飞（爱错 爱错 爱错baby）\n[03:29.760]从那里降落\n[03:31.680]多少不能原谅的错\n[03:33.550]请你原谅我的 爱错",
+  "remember": "[00:00.000]【前奏】\n\n[00:16.760]【主歌 1】\n[00:16.760]我问为什么\n[00:18.850]那女孩传简讯给我\n[00:24.100]而你为什么\n[00:26.190]不解释低着头沉默\n[00:30.460]我该相信你很爱我\n[00:34.240]不愿意敷衍我\n[00:37.570]还是明白\n[00:38.960]你已不想挽回什么\n\n[00:46.030]【预副歌 1】\n[00:46.030]想问为什么\n[00:48.110]我不再是你的快乐\n[00:53.180]可是为什么\n[00:55.250]却苦笑说我都懂了\n[00:59.290]自尊常常将人拖着\n[01:03.000]把爱都走曲折\n[01:06.260]假装了解是怕\n[01:08.450]真相太赤裸裸\n[01:11.720]狼狈比失去难受\n\n[01:14.220]【副歌 1】\n[01:14.220]我怀念的是无话不说\n[01:17.650]我怀念的是一起作梦\n[01:21.140]我怀念的是争吵以后\n[01:24.220]还是想要爱你的冲动\n[01:28.480]我记得那年生日\n[01:31.790]也记得那一首歌\n[01:35.060]记得那片星空\n[01:37.040]最紧的右手\n[01:38.860]最暖的胸口\n[01:40.390]谁记得\n[01:43.750]谁忘了\n\n[01:56.430]【预副歌 2】\n[01:56.430]想问为什么\n[01:58.420]我不再是你的快乐\n[02:03.250]可是为什么\n[02:05.310]却苦笑说我都懂了\n[02:09.340]自尊常常将人拖着\n[02:13.150]把爱都走曲折\n[02:16.250]假装了解是怕\n[02:18.540]真相太赤裸裸\n[02:21.840]狼狈比失去难受\n\n[02:24.220]【副歌 2】\n[02:24.220]我怀念的是无话不说\n[02:27.620]我怀念的是一起作梦\n[02:31.050]我怀念的是争吵以后\n[02:34.060]还是想要爱你的冲动\n[02:38.240]我记得那年生日\n[02:41.590]也记得那一首歌\n[02:44.740]记得那片星空\n[02:46.680]最紧的右手\n[02:48.430]最暖的胸口\n[02:49.900]谁忘了\n\n[02:51.680]【副歌变化】\n[02:51.680]我怀念的是无言感动\n[02:55.030]我怀念的是绝对炽热\n[02:58.470]我怀念的是你很激动\n[03:01.500]求我原谅抱得我都痛\n[03:05.680]我记得你在背后\n[03:09.020]也记得我颤抖着\n[03:12.220]记得感觉汹涌\n[03:14.150]最美的烟火\n[03:15.930]最长的相拥\n\n[03:17.340]【桥段】\n[03:17.340]谁爱得太自由\n[03:20.770]谁过头太远了\n[03:24.180]谁要走我的心\n[03:27.620]谁忘了那就是承诺\n[03:31.060]谁自顾自地走\n[03:34.380]谁忘了看着我\n[03:37.870]谁让爱变沉重\n[03:41.340]谁忘了要给你温柔\n\n[03:56.680]【末段副歌】\n[03:56.680]我怀念的\n[03:59.220]我还有想要爱你的冲动\n[04:03.770]我记得那年生日\n[04:07.150]也记得那一首歌\n[04:10.280]记得那片星空\n[04:12.220]最紧的右手\n[04:13.880]最暖的胸口\n\n[04:15.300]【尾段人声】\n[04:15.300]我放手\n[04:18.720]我让座\n[04:22.060]假洒脱\n[04:25.430]谁懂我多么不舍得\n[04:29.410]太爱了\n[04:32.250]所以我\n[04:35.660]没有哭\n[04:39.000]没有说",
+  "expose": "[00:00.000]【前奏】\n\n[00:08.390]【主歌】\n[00:08.390]我 不喜欢说话\n[00:14.990]不喜欢逛街\n[00:18.870]却只喜欢沉默\n[00:23.980]在 每一个清晨\n[00:30.350]会默默祈祷\n[00:34.460]每天会更美好\n\n[00:40.530]【预副歌 1】\n[00:40.530]光阴荏苒有谁还记得\n[00:48.070]那时天空准确的颜色\n[00:55.920]听说真爱会出现在\n[01:01.610]绚烂自私而无尽头的脑海\n\n[01:12.310]【副歌 1】\n[01:12.310]谁会来拆穿你编的谎言\n[01:19.980]谁会去放开又独自离开\n[01:27.820]我想谁都懂\n[01:31.420]有个人你也不想再伤害\n[01:35.570]我也不会再等着你回来\n\n[01:44.000]【间奏】\n\n[02:01.560]【预副歌 2】\n[02:01.560]光阴荏苒有谁还记得\n[02:09.430]那时天空准确的颜色\n[02:17.180]听说真爱会出现在\n[02:22.990]绚烂自私而无尽头的脑海\n\n[02:33.690]【副歌 2】\n[02:33.690]谁会来拆穿你给的谎言\n[02:41.160]谁会去放开又独自离开\n[02:49.180]我想谁都懂\n[02:52.620]有个人你也不想再伤害\n[02:56.800]我也不会再等着你回来\n\n[03:07.000]【尾奏】",
+  "surfer": "[00:00.000]【前奏】\n\n[00:27.890]【主歌 1】\n[00:27.890]沙滩黄昏的色温 即将入夜的时分\n[00:32.490]空气不再闷沉沉\n[00:35.000]月亮从海平线慢吞吞\n[00:40.610]你依然还是没出现 不是说要约\n\n[00:47.340]【主歌 2】\n[00:47.340]小屋里欢乐气氛 男男女女的笑声\n[00:52.100]我心不在焉等着\n[00:54.530]期待明天的浪顺顺的\n[01:00.140]你依然还是没出现 我回车上睡\n\n[01:06.650]【预副歌 1】\n[01:06.650]怀疑天气预报 准不准\n[01:11.370]像是现在心情 微微冷\n[01:16.200]难道你不知道 等你一整天 好闷\n\n[01:25.870]【副歌 1】\n[01:25.870]是我太认真\n[01:28.340]无法像你一样 随心所欲到处混\n[01:33.240]酒精蔓延全身\n[01:35.790]误解你笑容 你的眼神太迷人\n[01:45.500]是我太认真\n[01:47.930]那一夜的派对 大伙疯狂到清晨\n[01:52.810]月光如同迷药\n[01:55.350]误解你的吻 原来是我太认真\n\n[02:10.380]【预副歌 2】\n[02:10.380]怀疑天气预报 准不准\n[02:15.120]像是现在心情 微微冷\n[02:19.780]难道你不知道 等你一整天 好闷\n\n[02:29.580]【副歌 2】\n[02:29.580]是我太认真\n[02:32.020]无法像你一样 随心所欲到处混\n[02:36.900]酒精蔓延全身\n[02:39.430]误解你笑容 你的眼神太迷人\n[02:49.200]是我太认真\n[02:51.560]那一夜的派对 大伙疯狂到清晨\n[02:56.430]月光如同迷药\n[02:59.000]误解你的吻 原来是我太认真\n\n[03:08.780]【末段副歌】\n[03:08.780]是我太认真\n[03:11.160]无法像你一样 随心所欲到处混\n[03:16.080]酒精蔓延全身\n[03:18.610]误解你笑容 你的眼神太迷人\n[03:28.370]是我太认真\n[03:30.750]那一夜的派对 大伙疯狂到清晨\n[03:35.650]月光如同迷药\n[03:38.200]误解你的吻 原来是我太认真\n\n[03:45.610]【尾句】\n[03:45.610]原来是我太认真\n[03:49.400]原来是我太认真\n\n[03:50.000]【尾奏】",
+  "i-dont-care": "[00:00.000]【前奏】\n\n[00:11.100]【主歌 1】\n[00:11.100]我不大接受\n[00:13.800]什么被委屈别还手\n[00:16.210]我不太能够\n[00:18.960]顺应所谓的大潮流\n[00:21.320]噢～噢～噢～\n[00:26.570]噢～噢～噢～\n[00:31.770]花臂或刺头\n[00:34.620]应该没说明我所有\n[00:36.930]我不找借口\n[00:39.990]懂的人自然能看透\n[00:42.200]噢～噢～噢～\n[00:47.390]噢～噢～噢～\n\n[00:53.400]【预副歌】\n[00:53.400]没想辩解太多\n[00:55.850]别用外表解说我\n[01:03.700]误解不愿反驳\n[01:06.250]我拒绝只谈如果\n\n[01:14.730]【呼应段 1】\n[01:14.730]我管你的感受\n[01:16.230]噢～噢～噢～\n[01:20.390]我管你的感受\n[01:21.640]噢～噢～噢～\n[01:24.940]我管你的感受\n[01:26.440]噢～噢～噢～\n[01:30.000]我管你的感受\n[01:31.650]噢～噢～噢～\n\n[01:37.200]【副歌 1】\n[01:37.200]管你什么想法\n[01:39.900]我是我自己的表达\n[01:42.150]管你什么看法\n[01:45.060]我的世界我来浮夸\n[01:47.380]噢～噢～噢\n[01:50.550]我管你说得多复杂\n[01:52.300]噢～噢～噢～\n[01:55.730]我不要被谁给教化\n[01:58.090]管你什么说法\n[02:00.790]当我是傻或是笑话\n[02:03.240]管你什么办法\n[02:05.840]别幻想我沦落倒下\n[02:08.490]噢～噢～噢～\n[02:13.590]噢～噢～噢～\n\n[02:19.610]【桥段】\n[02:19.610]太多选择背后\n[02:21.960]绝望像没有出口\n[02:29.760]不如握紧拳头\n[02:32.180]这就是我的所有\n\n[02:40.940]【呼应段 2】\n[02:40.940]我管你的感受\n[02:42.370]噢～噢～噢～\n[02:45.590]我管你的感受\n[02:47.290]噢～噢～噢～\n[02:51.050]我管你的感受\n[02:52.700]噢～噢～噢～\n[02:56.100]我管你的感受\n[02:57.750]噢～噢～噢～\n\n[03:03.300]【主歌 2】\n[03:03.300]管你多怪罪\n[03:06.000]你没资格评头论足\n[03:08.260]管你自以为\n[03:11.160]你的意见我真不在乎\n[03:18.760]噢～噢～噢～\n\n[03:34.640]【末段副歌】\n[03:34.640]管你什么想法\n[03:37.340]我是我自己的表达\n[03:39.740]管你什么看法\n[03:42.440]我的世界我来浮夸\n[03:44.940]噢～噢～噢～\n[03:47.740]我管你说得多复杂\n[03:49.940]噢～噢～噢～\n[03:52.960]我不要被谁给教化\n[03:55.510]管你什么说法\n[03:58.120]当我是傻或是笑话\n[04:00.470]管你什么办法\n[04:03.370]别幻想我沦落倒下\n[04:05.870]噢～噢～噢～\n[04:10.830]噢～噢～噢～\n\n[04:13.000]【尾奏】",
+  "achu": "[00:00.000]【前奏】\n\n[00:26.460]【主歌】\n[00:26.460]在距离城市很远的地方\n[00:30.480]在我那沃野炊烟的故乡\n[00:36.890]有一个叫烽火台的村庄\n[00:40.890]我曾和一个叫阿楚的姑娘\n[00:47.360]彼此相依一起看月亮\n[00:51.290]嗅着那桂花淡淡的香\n[00:56.460]那夜的月光仍在天空发亮\n[01:01.670]今夜它却格外得让人心伤\n\n[01:08.540]【副歌 1】\n[01:08.540]阿楚姑娘\n[01:12.120]乡村的风里弥漫你的香\n[01:17.340]风吻过的口红欲盖弥彰\n[01:21.650]阿楚姑娘\n[01:29.010]时间的泪眼撕去我伪装\n[01:33.060]你可记得我年少的模样\n[01:38.520]今夜你会不会在远方\n[01:42.150]燃篝火为我守望\n\n[01:48.000]【间奏】\n\n[02:26.810]【副歌 2】\n[02:26.810]阿楚姑娘\n[02:30.270]乡村的风里弥漫你的香\n[02:35.610]风吻过的口红欲盖弥彰\n[02:39.840]阿楚姑娘\n[02:47.250]时间的泪眼撕去我伪装\n[02:51.360]你可记得我年少的模样\n[02:56.750]今夜你会不会在远方\n[03:00.410]燃篝火为我守望\n\n[03:07.830]【桥段】\n[03:07.830]温柔的晚风啊\n[03:12.090]请你带走我的惆怅吧\n[03:17.370]别让我追随不可遗弃的彷徨\n\n[03:21.620]【末段副歌】\n[03:21.620]阿楚姑娘\n[03:29.060]此时此刻你身在何方\n[03:33.240]你可记得我年少的模样\n[03:38.520]今夜你会不会在远方\n[03:42.150]燃篝火为我守望\n\n[03:48.930]【尾句】\n[03:48.930]今夜你会不会在远方\n[03:56.120]为我守望 守望",
+  "crescent": "[00:00.000]【前奏】\n\n[00:41.290]【主歌 1】\n[00:41.290]敦煌天空的沙粒\n[00:44.110]带着我们的记忆\n[00:46.770]我从半路看回去\n[00:49.590]这秦关漫漫好蜿踞\n[00:52.560]梦想穿过了西域\n[00:54.950]包含了多少的禅意\n[00:57.580]爱情像一本游记\n[01:00.410]我会找寻它的密语\n\n[01:03.260]【预副歌 1】\n[01:03.260]看月牙湾下的泪光\n[01:07.800]在丝路之上被遗忘\n\n[01:12.490]【副歌 1】\n[01:12.490]是谁的心啊 孤单地留下\n[01:17.720]他还好吗 我多想爱他\n[01:23.060]那永恒的泪 凝固那一句话\n[01:30.260]也许可能蒸发\n\n[01:34.490]【副歌 1 续段】\n[01:34.490]是谁的爱啊 比泪水坚强\n[01:39.890]轻声呼唤 就让我融化\n[01:45.370]每一滴雨水 演化成我翅膀\n[01:52.300]向着我爱的人 追吧\n\n[02:00.580]【间奏 1】\n\n[02:20.520]【主歌 2】\n[02:20.520]梦想穿过了西域\n[02:23.300]包含了多少的禅意\n[02:25.860]爱情像一本游记\n[02:29.100]我会找寻它的密语\n\n[02:31.390]【预副歌 2】\n[02:31.390]看月牙湾下的泪光\n[02:35.820]在丝路之上被遗忘\n\n[02:40.860]【副歌 2】\n[02:40.860]是谁的心啊 孤单地留下\n[02:46.170]他还好吗 我多想爱他\n[02:51.300]那永恒的泪 凝固那一句话\n[02:58.590]也许可能蒸发\n\n[03:02.940]【副歌 2 续段】\n[03:02.940]是谁的爱啊 比泪水坚强\n[03:08.070]轻声呼唤 就让我融化\n[03:13.550]每一滴雨水 演化成我翅膀\n[03:20.610]向着我爱的人 追吧\n\n[03:28.410]【间奏 2】\n\n[03:46.890]【末段副歌】\n[03:46.890]是谁的心啊 孤单地留下\n[03:52.220]他还好吗 我多想爱他\n[03:57.760]那永恒的泪 凝固那一句话\n[04:04.650]也许可能蒸发\n\n[04:08.990]【末段副歌续段】\n[04:08.990]是谁的爱啊 比泪水坚强\n[04:14.150]轻声呼唤 就让我融化\n[04:19.790]每一滴雨水 演化成我翅膀\n[04:27.070]向着我爱的人 追吧\n\n[04:36.570]【尾奏】",
+  "birds": "[00:00.000]【前奏】\n\n[00:03.490]【主歌 1】\n[00:03.490]I want you to stay\n[00:08.500]'Til I'm in the grave\n[00:12.620]'Til I rot away, dead and buried\n[00:17.060]'Til I'm in the casket you carry\n[00:21.250]If you go, I'm goin' too, uh\n[00:26.030]'Cause it was always you (Alright)\n[00:30.540]And if I'm turnin' blue, please don't save me\n[00:35.750]Nothin' left to lose without my baby\n\n[00:41.590]【副歌 1】\n[00:41.590]Birds of a feather, we should stick together, I know\n[00:46.470]I said I'd never think I wasn't better alone\n[00:50.880]Can't change the weather, might not be forever\n[00:54.480]But if it's forever, it's even better\n\n[00:59.580]【过渡 1】\n[00:59.580]And I don't know what I'm cryin' for\n[01:05.070]I don't think I could love you more\n[01:09.590]It might not be long, but baby, I\n\n[01:14.950]【副歌后段】\n[01:14.950]I'll love you 'til the day that I die\n[01:20.440]'Til the day that I die\n[01:25.250]'Til the light leaves my eyes\n[01:29.740]'Til the day that I die\n\n[01:35.080]【主歌 2】\n[01:35.080]I want you to see, hmm\n[01:39.620]How you look to me, hmm\n[01:44.020]You wouldn't believe if I told ya\n[01:48.490]You would keep the compliments I throw ya\n[01:52.630]But you're so full of shit, uh\n[01:57.850]Tell me it's a bit, oh\n[02:02.250]Say you don't see it, your mind's polluted\n[02:06.730]Say you wanna quit, don't be stupid\n\n[02:13.090]【过渡 2】\n[02:13.090]And I don't know what I'm cryin' for\n[02:17.690]I don't think I could love you more\n[02:22.280]Might not be long, but baby, I\n[02:29.530]Don't wanna say goodbye\n\n[02:31.290]【副歌 2】\n[02:31.290]Birds of a feather, we should stick together, I know ('Til the day that I die)\n[02:36.050]I said I'd never think I wasn't better alone ('Til the light leaves my eyes)\n[02:40.270]Can't change the weather, might not be forever ('Til the day that I die)\n[02:43.970]But if it's forever, it's even better\n\n[02:50.000]【尾段人声】\n[02:50.000]I knew you in another life\n[02:54.570]You had that same look in your eyes\n[02:59.290]I love you, don't act so surprised\n\n[03:08.090]【尾奏】"
+};
+
+function makeScrollClock(sections, anchors, endTime, endPosition) {
+  const cues = [{ time: 0, y: 0 }];
+  for (let index = 0; index < sections.length; index++) {
+    const { start, instrumental } = sections[index];
+    if (start > 0) cues.push({ time: start, y: anchors[index] });
+    const nextStart = sections[index + 1]?.start;
+    if (instrumental && nextStart != null) {
+      cues.push({ time: start + (nextStart - start) * 0.45, y: anchors[index] });
+    }
+  }
+  const last = cues.at(-1);
+  if (endPosition > last.y) {
+    cues.push({ time: endTime - Math.min(1, (endTime - last.time) / 2), y: endPosition });
+  }
+  cues.push({ time: endTime, y: endPosition });
+  return cues;
+}
+
+function clockPosition(cues, time) {
+  const index = cues.findIndex((cue) => cue.time > time);
+  if (index < 0) return cues.at(-1).y;
+  if (index === 0) return cues[0].y;
+  const from = cues[index - 1];
+  const to = cues[index];
+  return from.y + (to.y - from.y) * (time - from.time) / (to.time - from.time);
+}
+
+function positionTime(cues, y) {
+  if (y <= 0) return 0;
+  const exact = cues.find((cue) => Math.abs(cue.y - y) <= 0.5);
+  if (exact) return exact.time;
+  const index = cues.findIndex((cue) => cue.y > y);
+  if (index < 0) return cues.at(-1).time;
+  const from = cues[index - 1];
+  const to = cues[index];
+  return from.time + (to.time - from.time) * (y - from.y) / (to.y - from.y);
+}
+
+function studioAlignedSections(entries, track) {
+  const vocals = track.sections.filter((section) => !section.instrumental);
+  const nearest = vocals.map(({ start }) => {
+    const entry = entries.reduce((closest, current) =>
+      Math.abs(current.start - start) < Math.abs(closest.start - start) ? current : closest
+    );
+    return Math.abs(entry.start - start) <= 3.5 ? entry.start : null;
+  });
+  const first = entries[0].start;
+  const last = entries.at(-1).start;
+  if (nearest.filter((start) => start != null).length < vocals.length * 0.75 ||
+    Math.abs(first - vocals[0].start) > 6 || last < track.duration * 0.68 || last > track.duration + 4) return null;
+
+  let vocalIndex = 0;
+  const sections = track.sections.map((section) => ({
+    ...section,
+    start: section.instrumental ? section.start : nearest[vocalIndex++] ?? section.start,
+    lines: []
+  }));
+  if (sections.some((section, index) => index && section.start <= sections[index - 1].start)) return null;
+  const vocalSections = sections.filter((section) => !section.instrumental);
+  for (const entry of entries) {
+    const section = vocalSections.findLast((candidate) => candidate.start <= entry.start + 0.005);
+    (section ?? vocalSections[0]).lines.push(entry.line);
+  }
+  return { sections, timed: true, duration: Math.max(track.duration, last + 1) };
+}
+
+function readLyrics(input, track) {
+  const { sections, entries, labeled } = parseLyricText(input);
+  if (!sections.length) return { sections, timed: false, duration: null };
+  if (!labeled && entries.length > 12 && entries.every((entry) => entry.start != null)) {
+    const matched = studioAlignedSections(entries, track);
+    if (matched) return matched;
+  }
+  const timed = sections.every(({ start }, index) =>
+    Number.isFinite(start) && (index === 0 || start > sections[index - 1].start)
+  );
+  const lastCue = entries.reduce((latest, entry) => Math.max(latest, entry.start ?? 0), 0);
+  const duration = timed ? Math.max(sections.at(-1).start, lastCue) + 7 : null;
+  return { sections, timed, duration };
+}
+
+function normalizeTitle(value) {
+  return String(value ?? '').normalize('NFKC').toLocaleLowerCase()
+    .replace(/[^\p{Letter}\p{Number}]/gu, '');
+}
+
+function identifyLyricFile(filename, original) {
+  const title = original.match(/^\s*\[ti:\s*([^\]]+)\]/im)?.[1];
+  const stem = filename.replace(/\.(?:lrc|txt)$/i, '');
+  const guesses = [title, stem, ...stem.split(/\s+-\s+|[–—]/)].map(normalizeTitle).filter(Boolean);
+  const matches = tracks.filter((track) =>
+    [track.title, ...track.aliases].map(normalizeTitle).some((name) => guesses.includes(name))
+  );
+  return matches.length === 1 ? matches[0] : null;
+}
+
+async function readLyricFile(file) {
+  if (file.size > 1024 * 1024) throw new Error('请选择 1 MB 以内的歌词文件。');
+  const bytes = await file.arrayBuffer();
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    return new TextDecoder('gb18030').decode(bytes);
+  }
+}
+
+const scripts = [
+  {
+    "id": "mc-north",
+    "placement": "after",
+    "trackId": "north",
+    "title": "《一路向北》后串词",
+    "label": "开场与乐手介绍",
+    "cue": "唱完《一路向北》后讲",
+    "body": "①《一路向北》结束 →《Dear John》\n\n［等最后一个音结束，留一点时间给掌声，再开口。］\n\n谢谢大家！\n\n晚上好，我们是 Weekend Band，双休日乐队，我是 JoJo。欢迎大家来听我们的专场！\n\n用一句话来形容今天就是：“人好多啊”，相信都是我们乐手的亲朋好友 都是家人一般的存在啊\n\n我知道今天是不是来了蛮多宝哥的粉丝的，宝哥的应援团在哪里？\n\n所以宝哥的应援色是什么颜色啊，上次我在群里说是 阿宝色， 然后有一个人回复说：“嗯，阿宝是挺色的”   \n我们宝哥看到之后直接be like：omg 你吓到我啦\n\nOK 开个小玩笑啦 \n\n希望大家能够享受我们今天的演出  有酒水零食记得去畅饮哦  不用太客气\n\n我们现在正经的 正儿八经的 介绍一下我们的乐队成员 每个人会来一段单独的solo 用音乐代替语言\n\n\n【乐手介绍环节】\n\n键盘手 Kiwi\n\n吉他手 Judge\n\n鼓手 Laura\n\n吉他手 Jackie\n\n\n“蛮好，蛮好，结棍额\" 我都是第一次听。。。\n\n\n那其实，我们乐队是双主唱的配置，还有一位女主唱 Suri\n\n下一首歌呢，她会给大家带来 比莉的《Dear John》。歌名可能有点陌生哈，但旋律一出来，你们应该就知道了 “听过 听过” 这样子。\n\n那接下来，交给Suri"
+  },
+  {
+    "id": "mc-friends",
+    "placement": "after",
+    "trackId": "regular-friends",
+    "title": "《普通朋友》后串词",
+    "label": "介绍 Kiwi 与《泡沫》",
+    "cue": "唱完《普通朋友》后讲",
+    "body": "谢谢大家！\n\n这首歌叫《普通朋友》，我觉得是非常考验唱功的，而且也非常考验我们的吉他老师，前奏还是蛮难的，感谢Judge\n\n不知道大家有没有关注到我们刚刚这首歌的贝斯手，其实是我们的键盘老师Kiwi，非常的全能啊，不愧是星海音乐学院毕业的钢琴老师\n\n说到kiwi，其实在kiwi之前，我是乐队的键盘手，大半年的时间 也排过许多歌\n\n但是kiwi一出现，这个水平有一个断崖式的碾压啊，所以强势入驻，她不仅是键盘手，也是我们乐队排练时的指导老师，咱就是说 她直接就成为weekend band最严厉的父亲\n\n\n那接下来呢，我们把舞台交给Kiwi和Suri，带来一首邓紫棋的《泡沫》。\n\n这首歌我觉得很适合在现场听：开始像是在轻轻说话，情绪再一点一点往上走。\n\n所以，我们先安静下来，把接下来的几分钟交给她们"
+  },
+  {
+    "id": "mc-love",
+    "placement": "after",
+    "trackId": "wrong-love",
+    "title": "《爱错》后串词",
+    "label": "现场问答",
+    "cue": "唱完《爱错》后讲",
+    "body": "谢谢大家\n\n这首 爱错 其实是单依纯和王力宏的版本啊 现场有没有单依纯的粉丝啊？\n\n诶那我考考你啊  单依纯的演唱会  她会跟粉丝说 欢迎你们登陆什么岛？  \n\n1. 答对了 —— 那很本质了 喜欢单依纯 你很有品    那我们上点难度好不好 能不能在十秒钟说出单依纯的三首歌 要原创哦  \n\n2. 不知道 —— 可惜了 那我们奖品还是得送 我们换个题 —— 问现场有没有喜欢孙燕姿的，说出孙燕姿的三首歌\n\n\n接下来 Suri演唱一首《我怀念的》 听这首歌的时候 我还在上小学 刚学会上厕所  所以我相信大家也非常耳熟能详  欢迎suri"
+  },
+  {
+    "id": "mc-expose",
+    "placement": "after",
+    "trackId": "expose",
+    "title": "《拆穿》后串词",
+    "label": "接《浪人的…》",
+    "cue": "唱完《拆穿》后讲",
+    "body": "谢谢大家\n\n这首拆穿 非常的苦情歌哈 接下来我们换一种感觉 稍微放松一点\n\n下一首是来自张震岳的《浪人的...》\n\n这首歌有一种很舒服的复古律动，不用想太多，也不用站得太端正，跟着节奏晃一晃就很好。\n\n交给Suri，《浪人的…》。"
+  },
+  {
+    "id": "mc-care",
+    "placement": "after",
+    "trackId": "i-dont-care",
+    "title": "《我管你》后串词",
+    "label": "接《阿楚姑娘》",
+    "cue": "唱完《我管你》后讲",
+    "body": "谢谢大家！\n\n华晨宇的《我管你》。这一首唱完，很痛快。\n\n接下来我们把声音放轻一点，从摇滚换到一首有民谣气质的歌——《阿楚姑娘》。\n\n这首歌的原唱是梁凡，后来也有很多不同的演绎。今天，来听听 Suri 的版本。"
+  },
+  {
+    "id": "mc-birds-intro",
+    "placement": "before",
+    "trackId": "birds",
+    "title": "《鸟毛》前奏串词",
+    "label": "前奏时讲",
+    "cue": "《BIRDS OF A FEATHER》前奏响起时讲",
+    "body": "（《BIRDS OF A FEATHER》 前奏响起，乐手每两节依次加入）\n\n感谢大家，最后一首是来自Billie Eillish的《BIRDS OF A FEATHER》\n\n这是一首非常温暖的歌曲 作为收场曲目 希望大家喜欢"
+  },
+  {
+    "id": "mc-birds-close",
+    "placement": "after",
+    "trackId": "birds",
+    "title": "结束致谢",
+    "label": "唱完末曲后讲",
+    "cue": "《BIRDS OF A FEATHER》唱段结束后讲",
+    "body": "唱段结束，我接着说：\n\n非常感谢大家今天的到来，你们的聆听 就是对我们最大的肯定\n\n其实今天对我们乐队来说是圆梦一般的存在，谢谢你们帮我们圆梦，也希望你们每个人遇到的所有风雨都会化作彩虹，所有美梦都能成真，谢谢！！！！"
+  }
+];
+
+const showOrder = tracks.flatMap((track) => [
+  ...scripts.filter((script) => script.trackId === track.id && script.placement === 'before'),
+  track,
+  ...scripts.filter((script) => script.trackId === track.id && script.placement === 'after')
+]);
+
+const byId = (id) => document.getElementById(id);
+const sectionsHost = byId('sections');
+const toolbar = byId('toolbar');
+const dialog = byId('import-dialog');
+const rail = byId('rail');
+const play = byId('play');
+const pace = byId('pace');
+const previous = byId('previous');
+const next = byId('next');
+const position = byId('position');
+const mode = byId('mode');
+const seek = byId('seek');
+const clock = byId('clock');
+const sourceMode = byId('source-mode');
+const sourceNote = byId('source-note');
+const lyricInput = byId('lyric-input');
+const lyricFile = byId('lyric-file');
+const bulkFile = byId('bulk-file');
+const importedLyrics = new Map();
+const setlistButtons = new Map();
+const showPrevious = byId('show-previous');
+const showNext = byId('show-next');
+const message = byId('import-message');
+const clamp = (number, low, high) => Math.max(low, Math.min(high, number));
+const storageKey = 'weekend-band-stage-cue-v1';
+const state = {
+  track: tracks[0],
+  step: tracks[0],
+  sections: [],
+  timed: false,
+  duration: null,
+  nodes: [],
+  anchors: [],
+  end: 0,
+  index: -1,
+  font: window.innerWidth < 540 ? 30 : 38,
+  original: '',
+  playing: false,
+  hasStarted: false,
+  frame: 0,
+  lastFrameTime: 0,
+  scrollPosition: 0,
+  pausedY: 0,
+  time: 0,
+  clock: [],
+  runFrom: 0,
+  runTime: 0,
+  rate: 1
+};
+
+function timeLabel(seconds) {
+  const whole = Math.floor(seconds);
+  const minutes = String(Math.floor(whole / 60)).padStart(2, '0');
+  return minutes + ':' + String(whole % 60).padStart(2, '0');
+}
+
+function renderSetlist() {
+  const list = byId('setlist');
+  for (const step of showOrder) {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    const script = Boolean(step.body);
+    button.type = 'button';
+    button.className = script ? 'song script-entry' : 'song';
+    const number = document.createElement('span');
+    number.className = 'song-number';
+    number.textContent = script ? '串词' : trackNumber(tracks.indexOf(step));
+    const name = document.createElement('span');
+    name.className = 'song-name';
+    name.textContent = step.title;
+    button.title = script ? step.cue : step.title;
+    const tag = document.createElement('span');
+    tag.className = 'song-state';
+    button.append(number, name, tag);
+    button.addEventListener('click', () => {
+      toggleRail(false);
+      openShowStep(step);
+    });
+    setlistButtons.set(step, { button, tag });
+    item.append(button);
+    list.append(item);
+    if (step.id === 'mc-love') {
+      const breakRow = document.createElement('li');
+      breakRow.className = 'interlude';
+      breakRow.textContent = '猜歌互动';
+      list.append(breakRow);
+    }
+  }
+}
+
+function trackNumber(index) {
+  return String(index + 1).padStart(2, '0');
+}
+
+function updateSetlist() {
+  for (const [step, { button, tag }] of setlistButtons) {
+    button.setAttribute('aria-current', String(step === state.step));
+    if (!step.body) tag.textContent = importedLyrics.has(step.id) || bundledLyrics[step.id] ? '歌词' : '';
+  }
+}
+
+function keepActiveStepVisible() {
+  const active = setlistButtons.get(state.step)?.button;
+  if (!active || !rail.getClientRects().length) return;
+  const buttonBounds = active.getBoundingClientRect();
+  const railBounds = rail.getBoundingClientRect();
+  if (buttonBounds.bottom > railBounds.bottom) {
+    rail.scrollTop += buttonBounds.bottom - railBounds.bottom + 8;
+  } else if (buttonBounds.top < railBounds.top) {
+    rail.scrollTop -= railBounds.top - buttonBounds.top + 8;
+  }
+}
+
+function updateShowNavigation() {
+  const index = showOrder.indexOf(state.step);
+  const before = showOrder[index - 1];
+  const after = showOrder[index + 1];
+  showPrevious.hidden = !before;
+  showNext.hidden = !after;
+  if (before) showPrevious.setAttribute('aria-label', '上一项：' + before.title);
+  if (after) {
+    const label = after.id === 'birds' && state.step.id === 'mc-birds-intro'
+      ? '切到《鸟毛》歌词 →'
+      : '下一项 · ' + after.title + ' →';
+    showNext.textContent = label;
+    showNext.setAttribute('aria-label', label);
+  }
+  updateSetlist();
+  keepActiveStepVisible();
+}
+
+function openShowStep(step) {
+  if (step.body) openScript(step);
+  else openTrack(step);
+  byId('track-title').focus({ preventScroll: true });
+}
+
+function setScriptView(active) {
+  byId('score').dataset.script = String(active);
+  byId('song-transport').hidden = active;
+  byId('import-open').hidden = active;
+  byId('smaller').setAttribute('aria-label', active ? '缩小串词字号' : '缩小歌词字号');
+  byId('larger').setAttribute('aria-label', active ? '放大串词字号' : '放大歌词字号');
+}
+
+function openScript(script) {
+  pause();
+  state.step = script;
+  setScriptView(true);
+  byId('track-number').textContent = '';
+  byId('track-artist').textContent = script.label;
+  byId('track-title').textContent = script.title;
+  sourceMode.textContent = '串词';
+  sourceNote.textContent = script.cue;
+  byId('source-links').hidden = true;
+  byId('timeline').hidden = true;
+
+  const body = document.createElement('div');
+  body.className = 'script-copy';
+  for (const paragraph of script.body.split(/\n[ \t]*\n+/)) {
+    const p = document.createElement('p');
+    const direction = /^(?:①|［[^］]+］$|【[^】]+】$|（[^）]+）$|唱段结束，我接着说：$)/.test(paragraph.trim());
+    p.className = direction ? 'script-direction' : 'script-paragraph';
+    p.textContent = paragraph;
+    body.append(p);
+  }
+  sectionsHost.replaceChildren(body);
+  window.scrollTo(0, 0);
+  updateShowNavigation();
+}
+
+function openTrack(track) {
+  pause();
+  const custom = importedLyrics.get(track.id);
+  const original = custom ?? bundledLyrics[track.id] ?? '';
+  const content = original
+    ? readLyrics(original, track)
+    : { sections: track.sections, timed: true, duration: track.duration };
+  if (!custom && original) content.duration = track.duration;
+  Object.assign(state, content, { track, step: track, original, bundled: !custom && Boolean(original), hasStarted: false });
+  setScriptView(false);
+  byId('track-number').textContent = trackNumber(tracks.indexOf(track)) + ' / ' + tracks.length;
+  byId('track-artist').textContent = track.artist + (track.stage ? ' · ' + track.stage : '');
+  byId('track-title').textContent = track.title;
+  byId('import-title').textContent = '导入《' + track.title + '》歌词';
+  byId('lyric-source').href = track.lyrics;
+  byId('timing-source').href = track.timing;
+  byId('timing-source').hidden = track.timing === track.lyrics;
+  updateShowNavigation();
+  renderLyrics();
+  setTransport();
+}
+
+function renderLyrics() {
+  sourceMode.textContent = state.bundled ? '已内置 LRC' :
+    state.original ? (state.timed ? '已导入 LRC' : '已导入歌词') : '参考段落';
+  sourceNote.textContent = state.bundled
+    ? state.track.version
+    : state.original
+      ? (state.timed ? '按导入的段落时间滚动。' : '手动翻段或开启匀速慢滚。')
+      : state.track.version + ' · 导入歌词后可在这里读完整正文。';
+  byId('source-links').hidden = Boolean(state.original);
+  byId('timeline').hidden = !state.timed;
+  if (state.timed) seek.max = state.duration;
+  state.nodes = state.sections.map(({ title, lines, start, note }, index) => {
+    const stanza = document.createElement('section');
+    stanza.className = 'stanza';
+    if (!state.original) stanza.dataset.preview = 'true';
+    const heading = document.createElement('h2');
+    const label = document.createElement('span');
+    label.textContent = lines.length ? title : '段落提示';
+    heading.append(label);
+    if (start !== null) {
+      const cue = document.createElement('time');
+      const end = state.sections[index + 1]?.start ?? state.duration;
+      cue.textContent = timeLabel(Math.round(start)) +
+        (!state.original && end != null ? '–' + timeLabel(Math.round(end)) : '');
+      cue.dateTime = 'PT' + start + 'S';
+      heading.append(cue);
+    }
+    stanza.append(heading);
+    if (!lines.length) {
+      const cue = document.createElement('p');
+      cue.className = 'cue-text';
+      cue.textContent = title;
+      stanza.append(cue);
+    }
+    for (const line of lines) {
+      const paragraph = document.createElement('p');
+      paragraph.className = 'line';
+      paragraph.textContent = line;
+      stanza.append(paragraph);
+    }
+    if (note) {
+      const hint = document.createElement('p');
+      hint.className = 'stanza-note';
+      hint.textContent = note;
+      stanza.append(hint);
+    }
+    return stanza;
+  });
+  sectionsHost.replaceChildren(...state.nodes);
+  state.index = -1;
+  state.time = 0;
+  window.scrollTo(0, 0);
+  state.pausedY = window.scrollY;
+  measureSections();
+  updatePosition();
+}
+
+function measureSections() {
+  const inset = toolbar.offsetHeight + 28;
+  const limit = Math.max(0, document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  state.anchors = state.nodes.map((node, index) =>
+    index === 0 ? 0 : clamp(node.getBoundingClientRect().top + window.scrollY - inset, 0, limit)
+  );
+  const lastLine = state.nodes.at(-1).lastElementChild;
+  const panel = byId('transport').offsetHeight + byId('timeline').offsetHeight;
+  const screenBottom = document.documentElement.clientHeight - panel - 14;
+  const lastLineScroll = lastLine.getBoundingClientRect().bottom + window.scrollY - screenBottom;
+  state.end = Math.min(limit, Math.max(state.anchors.at(-1), lastLineScroll));
+  if (state.timed) state.clock = makeScrollClock(state.sections, state.anchors, state.duration, state.end);
+}
+
+function paintClock() {
+  const label = timeLabel(Math.round(state.time)) + ' / ' + timeLabel(Math.round(state.duration));
+  if (clock.textContent !== label) {
+    clock.textContent = label;
+  }
+  if (seek.getAttribute('aria-valuetext') !== label) seek.setAttribute('aria-valuetext', label);
+  if (Math.abs(Number(seek.value) - state.time) > 0.02) seek.value = state.time;
+}
+
+function updatePosition() {
+  let index = 0;
+  for (let i = 1; i < state.anchors.length; i++) {
+    const reached = state.timed ? state.time + 0.001 >= state.sections[i].start : window.scrollY + 2 >= state.anchors[i];
+    if (!reached) break;
+    index = i;
+  }
+  if (state.timed) paintClock();
+  if (index === state.index) return;
+  if (state.nodes[state.index]) delete state.nodes[state.index].dataset.current;
+  state.index = index;
+  state.nodes[index].dataset.current = 'true';
+  position.textContent = state.sections[index].title + ' · ' + (index + 1) + '/' + state.sections.length;
+  previous.disabled = index === 0;
+  next.disabled = index === state.sections.length - 1;
+}
+
+function syncManualPosition() {
+  if (state.step.body) return;
+  if (state.timed && !state.playing && Math.abs(window.scrollY - state.pausedY) > 0.75) {
+    state.time = positionTime(state.clock, window.scrollY);
+    state.pausedY = window.scrollY;
+  }
+  updatePosition();
+}
+
+function seekTo(time) {
+  state.time = clamp(time, 0, state.duration);
+  window.scrollTo(0, clockPosition(state.clock, state.time));
+  state.pausedY = window.scrollY;
+  seek.value = state.time;
+  updatePosition();
+  if (!state.playing && state.time < state.duration) setTransport();
+}
+
+function applyFont() {
+  document.documentElement.style.setProperty('--lyric-size', state.font + 'px');
+  byId('font-size').textContent = state.font;
+  byId('smaller').disabled = state.font <= 22;
+  byId('larger').disabled = state.font >= 76;
+}
+
+function changeFont(delta) {
+  pause();
+  if (state.step.body) {
+    const anchor = Array.from(sectionsHost.querySelectorAll('p'))
+      .find((paragraph) => paragraph.getBoundingClientRect().bottom > toolbar.offsetHeight);
+    const before = anchor?.getBoundingClientRect().top;
+    state.font = clamp(state.font + delta, 22, 76);
+    applyFont();
+    if (anchor && window.scrollY > 8) window.scrollBy(0, anchor.getBoundingClientRect().top - before);
+    saveSettings();
+    return;
+  }
+  const node = state.nodes[state.index];
+  const before = node.getBoundingClientRect().top;
+  state.font = clamp(state.font + delta, 22, 76);
+  applyFont();
+  if (!state.timed && window.scrollY > 8) window.scrollBy(0, node.getBoundingClientRect().top - before);
+  measureSections();
+  if (state.timed) seekTo(state.time);
+  else updatePosition();
+  saveSettings();
+}
+
+function jump(delta) {
+  const index = clamp(state.index + delta, 0, state.sections.length - 1);
+  pause();
+  if (state.timed) seekTo(index === 0 ? 0 : state.sections[index].start);
+  else {
+    window.scrollTo(0, state.anchors[index]);
+    updatePosition();
+  }
+}
+
+function setTransport(label) {
+  play.textContent = state.playing ? 'Ⅱ 暂停' : state.hasStarted ? '继续慢滚' : '开始慢滚';
+  play.setAttribute('aria-pressed', String(state.playing));
+  mode.textContent = label || (state.hasStarted ? '慢滚已暂停' : '手动滑动');
+}
+
+function pause(label) {
+  if (!state.playing) return;
+  state.playing = false;
+  state.pausedY = window.scrollY;
+  cancelAnimationFrame(state.frame);
+  setTransport(label);
+}
+
+function scrollFrame(now) {
+  if (!state.playing) return;
+  if (state.timed) {
+    state.time = Math.min(state.duration, state.runFrom + (now - state.runTime) / 1000 * state.rate);
+    window.scrollTo(0, clockPosition(state.clock, state.time));
+    updatePosition();
+    if (state.time >= state.duration) {
+      pause('已到曲终');
+      return;
+    }
+  } else {
+    const elapsed = Math.min(64, now - state.lastFrameTime);
+    state.lastFrameTime = now;
+    state.scrollPosition = Math.min(state.end, state.scrollPosition + 9 * state.font / 38 * state.rate * elapsed / 1000);
+    window.scrollTo(0, state.scrollPosition);
+    if (state.scrollPosition >= state.end) {
+      pause('已到歌词底部');
+      return;
+    }
+  }
+  state.frame = requestAnimationFrame(scrollFrame);
+}
+
+function togglePlay() {
+  if (state.playing) {
+    pause();
+    return;
+  }
+  syncManualPosition();
+  if (state.timed ? state.time >= state.duration : window.scrollY >= state.end - 2) {
+    setTransport(state.timed ? '已到曲终' : '已到歌词底部');
+    return;
+  }
+  state.playing = true;
+  state.hasStarted = true;
+  state.rate = Number(pace.value);
+  state.runFrom = state.time;
+  state.runTime = performance.now();
+  state.lastFrameTime = state.runTime;
+  state.scrollPosition = window.scrollY;
+  setTransport(state.timed ? '按段计时中' : '匀速慢滚中');
+  state.frame = requestAnimationFrame(scrollFrame);
+}
+
+function toggleRail(open) {
+  if (open) pause();
+  rail.dataset.open = String(open);
+  byId('rail-shade').dataset.open = String(open);
+  byId('open-setlist').setAttribute('aria-expanded', String(open));
+  if (open) {
+    byId('close-setlist').focus({ preventScroll: true });
+    keepActiveStepVisible();
+  } else if (getComputedStyle(byId('open-setlist')).display !== 'none') byId('open-setlist').focus({ preventScroll: true });
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({ lyrics: Object.fromEntries(importedLyrics), font: state.font, pace: pace.value }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    if (!saved) return;
+    if (Number.isFinite(saved.font)) state.font = clamp(saved.font, 22, 76);
+    if (Array.from(pace.options).some((option) => option.value === saved.pace)) pace.value = saved.pace;
+    for (const track of tracks) {
+      const original = saved.lyrics?.[track.id] ?? (track === tracks[0] ? saved.original : null);
+      if (typeof original === 'string' && original && readLyrics(original, track).sections.length) {
+        importedLyrics.set(track.id, original);
+      }
+    }
+  } catch {
+    // The stage reader works even when browser storage is unavailable.
+  }
+}
+
+function reportImport(text) {
+  message.textContent = text;
+  message.hidden = !text;
+}
+
+function installLyrics(original) {
+  if (original) importedLyrics.set(state.track.id, original);
+  else importedLyrics.delete(state.track.id);
+  dialog.close();
+  openTrack(state.track);
+  if (!saveSettings()) {
+    sourceNote.textContent = '此浏览器暂时无法保存歌词，请在刷新后重新导入。';
+  }
+}
+
+window.addEventListener('scroll', syncManualPosition, { passive: true });
+window.addEventListener('resize', () => {
+  pause();
+  if (state.step.body) return;
+  measureSections();
+  if (state.timed) seekTo(state.time);
+  else updatePosition();
+});
+window.visualViewport?.addEventListener('resize', () => {
+  if (Math.abs(window.visualViewport.scale - 1) > 0.02) pause();
+});
+window.addEventListener('wheel', () => pause(), { passive: true });
+document.addEventListener('touchstart', (event) => {
+  if (event.touches.length > 1 || !event.target.closest('button, select, input, textarea')) pause();
+}, { passive: true });
+byId('score').addEventListener('pointerdown', () => pause(), { passive: true });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pause();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !dialog.open && rail.dataset.open === 'true') toggleRail(false);
+  if (!dialog.open && ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(event.key)) pause();
+});
+
+byId('smaller').addEventListener('click', () => changeFont(-4));
+byId('larger').addEventListener('click', () => changeFont(4));
+byId('open-setlist').addEventListener('click', () => toggleRail(true));
+byId('close-setlist').addEventListener('click', () => toggleRail(false));
+byId('rail-shade').addEventListener('click', () => toggleRail(false));
+showPrevious.addEventListener('click', () => openShowStep(showOrder[showOrder.indexOf(state.step) - 1]));
+showNext.addEventListener('click', () => openShowStep(showOrder[showOrder.indexOf(state.step) + 1]));
+previous.addEventListener('click', () => jump(-1));
+next.addEventListener('click', () => jump(1));
+play.addEventListener('click', togglePlay);
+pace.addEventListener('change', () => {
+  if (state.timed && state.playing) {
+    state.runFrom = state.time;
+    state.runTime = performance.now();
+  }
+  state.rate = Number(pace.value);
+  saveSettings();
+});
+seek.addEventListener('pointerdown', () => pause());
+seek.addEventListener('input', () => {
+  pause();
+  seekTo(Number(seek.value));
+});
+seek.addEventListener('blur', () => {
+  seek.value = state.time;
+});
+
+byId('import-open').addEventListener('click', () => {
+  pause();
+  lyricInput.value = state.original;
+  lyricFile.value = '';
+  bulkFile.value = '';
+  reportImport('');
+  dialog.showModal();
+});
+byId('import-close').addEventListener('click', () => dialog.close());
+lyricFile.addEventListener('change', async () => {
+  const file = lyricFile.files[0];
+  if (!file) return;
+  try {
+    const original = await readLyricFile(file);
+    if (dialog.open && lyricFile.files[0] === file) {
+      lyricInput.value = original;
+      reportImport('文件已读取，点击「应用歌词」更新。');
+    }
+  } catch {
+    reportImport(file.size > 1024 * 1024 ? '请选择 1 MB 以内的歌词文件。' : '读取失败，可以把歌词粘贴到文本框。');
+  }
+});
+
+bulkFile.addEventListener('change', async () => {
+  const files = Array.from(bulkFile.files);
+  if (!files.length) return;
+  bulkFile.disabled = true;
+  const updates = new Map();
+  const unmatched = [];
+  for (const file of files) {
+    try {
+      const original = (await readLyricFile(file)).trim();
+      const track = identifyLyricFile(file.name, original);
+      if (track && original.length <= 50000 && readLyrics(original, track).sections.length && !updates.has(track.id)) {
+        updates.set(track.id, original);
+      } else {
+        unmatched.push(file.name);
+      }
+    } catch {
+      unmatched.push(file.name);
+    }
+  }
+  bulkFile.value = '';
+  bulkFile.disabled = false;
+  for (const [id, original] of updates) importedLyrics.set(id, original);
+  if (!state.step.body && updates.has(state.track.id)) {
+    openTrack(state.track);
+    if (dialog.open) lyricInput.value = state.original;
+  } else {
+    updateSetlist();
+  }
+  const saved = !updates.size || saveSettings();
+  const summary = '已导入 ' + updates.size + ' 首。' +
+    (unmatched.length ? '跳过 ' + unmatched.length + ' 个文件：' + unmatched.slice(0, 4).join('、') + '。' : '') +
+    (saved ? '' : '浏览器暂时无法保存，刷新后需要重新导入。');
+  if (dialog.open) reportImport(summary);
+  else if (!saved) sourceNote.textContent = summary;
+});
+byId('import-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const original = lyricInput.value.trim();
+  if (original.length > 50000) {
+    reportImport('请只导入这一首歌，歌词最多 50,000 个字符。');
+    return;
+  }
+  const parsed = readLyrics(original, state.track);
+  if (!parsed.sections.length) {
+    reportImport('请先粘贴歌词或选择有正文的文件。');
+    return;
+  }
+  installLyrics(original);
+});
+byId('restore').addEventListener('click', () => installLyrics(''));
+
+const shell = document.querySelector('.shell');
+const transport = byId('transport');
+try {
+  history.scrollRestoration = 'manual';
+  loadSettings();
+  applyFont();
+  renderSetlist();
+  shell.hidden = false;
+  transport.hidden = false;
+  document.body.classList.add('stage-ready');
+  const requestedStep = showOrder.find(step => location.hash === '#offline-' + step.id);
+  openShowStep(requestedStep ?? tracks[0]);
+} catch (error) {
+  document.body.classList.remove('stage-ready');
+  shell.hidden = true;
+  transport.hidden = true;
+  console.error('Could not start the interactive reader', error);
+}
+</script>
+</body>
+</html>
