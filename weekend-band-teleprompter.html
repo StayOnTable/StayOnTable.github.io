@@ -118,15 +118,6 @@ button:disabled { cursor: default; }
 .script-entry .song-number { color: #e5b878; }
 .script-entry .song-name { white-space: normal; }
 .script-entry[aria-current="true"] { border-color: #755735; background: #3a3024; color: #fff0d7; }
-.interlude {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #c3cdbf;
-  padding: 5px 9px;
-  font-size: 11px;
-}
-.interlude::before { content: ""; display: inline-block; width: 15px; height: 1px; background: #78856e; }
 .rail-close, .rail-open, .rail-shade { display: none; }
 .stage { min-width: 0; }
 .toolbar {
@@ -361,7 +352,7 @@ body.stage-ready #offline-reader { display: none; }
   font-weight: 650;
 }
 .offline-toolbar a, .offline-jumps a, .offline-index a { display: inline-block; padding: 12px 4px; }
-.offline-help, .offline-meta, .offline-stanza h3, .offline-interlude { color: var(--quiet); }
+.offline-help, .offline-meta, .offline-stanza h3 { color: var(--quiet); }
 .offline-help { margin: 13px 0 19px; font-size: 14px; }
 .offline-meta { margin: 0 0 8px; font-size: 14px; }
 .offline-item, .offline-index { scroll-margin-top: 82px; }
@@ -385,8 +376,6 @@ body.stage-ready #offline-reader { display: none; }
 .offline-index a { display: block; }
 .offline-script-link { padding-left: 16px; }
 .offline-reader .offline-script-link a { color: #efc991; }
-.offline-interlude { padding: 10px 4px; font-size: 14px; }
-.offline-break { margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -518,6 +507,18 @@ body.stage-ready #offline-reader { display: none; }
 <p class="offline-lyric">别想那么多</p></section>
 <section class="offline-stanza"><h3>尾奏 <time>04:13</time></h3>
 </section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-suri-dear-john">下一项 · Suri · 《Dear John》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-suri-dear-john"><p class="offline-meta">《Dear John》结束后由 Suri 讲</p><h2>Suri · 《Dear John》后串词</h2>
+<p class="script-paragraph">Hello，大家好，我是Suri～</p>
+<p class="script-paragraph">刚才这首《Dear John》，是我加入双休日乐队后 排练的第一首曲目。大家觉得怎么样？</p>
+<p class="script-paragraph">不知道大家有没有注意到，这首歌的编曲特别复古，一下子就把人带回了千禧年代。其实这首歌还真是一首有些年头的经典老歌。它收录于台湾歌手比莉1999年发行的专辑当中。这首歌最先是日文歌曲，经过重新编曲和演绎，变成了我们今天听到的这个版本。所以，今天能在现场和大家一起重新演绎这首将近三十年前的作品，我觉得是一件很浪漫的事情。</p>
+<p class="script-paragraph">说到那个时期，我们不得不说一位华语乐坛的音乐鬼才。</p>
+<p class="script-paragraph">他的唱功、创作和节奏感都有着非常鲜明的个人风格。大家猜猜他是谁？</p>
+<p class="script-paragraph">没错，就是陶喆！现场有没有喜欢陶喆的朋友？</p>
+<p class="script-paragraph">那接下来这份礼物就有地方送了～来一个小挑战，十秒钟之内说出三首不同的陶喆的歌曲，说歌名就行。谁来？有把握的举手！</p>
+<p class="script-paragraph">好的，就这位朋友，不着急，等你准备好我们再开始。</p>
+<p class="script-paragraph">可以，这三首！这套送给你！</p>
+<p class="script-paragraph">接下来这首歌黑色柳丁，希望大家跟着一起摇起来！</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-black-tangerine">下一项 · 黑色柳丁 ↓</a></nav></article>
 <article class="offline-item" id="offline-black-tangerine"><p class="offline-meta">陶喆</p><h2>黑色柳丁</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
@@ -582,6 +583,9 @@ body.stage-ready #offline-reader { display: none; }
 <section class="offline-stanza"><h3>结尾反复 <time>04:09</time></h3>
 <p class="offline-lyric">我只想哭 只想哭 只想哭</p>
 <p class="offline-lyric">我只想哭 只想哭 只想哭</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-suri-black-tangerine">下一项 · Suri · 《黑色柳丁》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-suri-black-tangerine"><p class="offline-meta">《黑色柳丁》结束后由 Suri 讲</p><h2>Suri · 《黑色柳丁》后串词</h2>
+<p class="script-paragraph">大家有没有发现，陶喆的歌是不是特别容易让人上头？陶喆有一种很神奇的能力，就是能把感情关系唱得特别复杂。比如两个人明明每天聊天、每天见面，问起来却说：我们只是普通朋友。今天现场有没有和普通朋友一起来的？～～～～接下来这首歌，送给今天来到现场的所有 普通朋友～～～</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-regular-friends">下一项 · 普通朋友 ↓</a></nav></article>
 <article class="offline-item" id="offline-regular-friends"><p class="offline-meta">陶喆</p><h2>普通朋友</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
@@ -686,61 +690,67 @@ body.stage-ready #offline-reader { display: none; }
 <p class="offline-lyric">说什么你爱我 如果骗我 我宁愿你沉默</p></section>
 <section class="offline-stanza"><h3>尾奏 <time>04:11</time></h3>
 </section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-suri-bubble">下一项 · Suri · 《泡沫》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-suri-bubble"><p class="offline-meta">《泡沫》结束后由 Suri 讲</p><h2>Suri · 《泡沫》后串词</h2>
+<p class="script-paragraph">谢谢大家！刚才这首泡沫，听过瘾了吗。哈哈，我觉得今天的情歌浓度有点超标了。不过既然都唱到这里了，那不如再来一首。接下来就请出我们的男主唱，希望大家能喜欢这首不太一样的《爱错》～</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-wrong-love">下一项 · 爱错 ↓</a></nav></article>
-<article class="offline-item" id="offline-wrong-love"><p class="offline-meta">王力宏</p><h2>爱错</h2>
+<article class="offline-item" id="offline-wrong-love"><p class="offline-meta">王力宏 × 单依纯 · 现场合唱版</p><h2>爱错</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
 </section>
-<section class="offline-stanza"><h3>主歌 1 <time>00:13</time></h3>
+<section class="offline-stanza"><h3>主歌 1 <time>00:14</time></h3>
 <p class="offline-lyric">北风毫不留情</p>
 <p class="offline-lyric">把叶子吹落</p>
-<p class="offline-lyric">坠落的它选择了逃脱</p>
+<p class="offline-lyric">脆弱的她选择了逃脱</p>
 <p class="offline-lyric">叶子失去消息</p>
 <p class="offline-lyric">风才感觉寂寞</p>
 <p class="offline-lyric">整个冬天</p>
 <p class="offline-lyric">北风的痛没人能说</p></section>
-<section class="offline-stanza"><h3>副歌 1 <time>00:45</time></h3>
+<section class="offline-stanza"><h3>副歌 1 <time>00:46</time></h3>
 <p class="offline-lyric">我从来没想过</p>
 <p class="offline-lyric">我会这样做</p>
 <p class="offline-lyric">从来没爱过</p>
 <p class="offline-lyric">所以爱错</p>
 <p class="offline-lyric">我从哪里起飞</p>
 <p class="offline-lyric">从哪里降落</p>
-<p class="offline-lyric">多少不能原谅的错 却不能重来过</p></section>
+<p class="offline-lyric">多少不能原谅的错</p>
+<p class="offline-lyric">却不能重来过</p></section>
 <section class="offline-stanza"><h3>主歌 2 <time>01:19</time></h3>
 <p class="offline-lyric">翻开回忆角落</p>
 <p class="offline-lyric">完美的生活</p>
 <p class="offline-lyric">以为幸福都可以掌握</p>
-<p class="offline-lyric">仔细回味当初那个故事背后</p>
-<p class="offline-lyric">喔 原来是我</p>
+<p class="offline-lyric">仔细回味当初</p>
+<p class="offline-lyric">那个故事背后</p>
+<p class="offline-lyric">Oh 原来是我</p>
 <p class="offline-lyric">犯下从没承认的错</p></section>
 <section class="offline-stanza"><h3>副歌 2 <time>01:51</time></h3>
 <p class="offline-lyric">我从来没想过</p>
 <p class="offline-lyric">我会这样做</p>
-<p class="offline-lyric">从来没爱过 所以爱错</p>
-<p class="offline-lyric">我 从那里起飞</p>
-<p class="offline-lyric">从那里降落</p>
-<p class="offline-lyric">多少不能原谅的错却不能重来过</p></section>
+<p class="offline-lyric">从来没爱过</p>
+<p class="offline-lyric">所以爱错</p>
+<p class="offline-lyric">我从哪里起飞</p>
+<p class="offline-lyric">从哪里降落</p>
+<p class="offline-lyric">多少不能原谅的错</p>
+<p class="offline-lyric">却不能重来过</p></section>
 <section class="offline-stanza"><h3>桥段 <time>02:22</time></h3>
-<p class="offline-lyric">在这少了你的世界</p>
-<p class="offline-lyric">喔 找不会那些感觉</p>
-<p class="offline-lyric">其实我不想 道别</p>
+<p class="offline-lyric">在这少了你的世界 Oh</p>
+<p class="offline-lyric">找不回那些感觉</p>
+<p class="offline-lyric">其实我不想道别</p>
+<p class="offline-lyric">那些过去</p>
 <p class="offline-lyric">那些过去</p></section>
-<section class="offline-stanza"><h3>副歌 3 <time>02:43</time></h3>
+<section class="offline-stanza"><h3>副歌 3 <time>02:49</time></h3>
 <p class="offline-lyric">我从来没想过</p>
 <p class="offline-lyric">我会这样做</p>
-<p class="offline-lyric">从来没爱过 （从来没有爱过那么认真）</p>
-<p class="offline-lyric">我从那里起飞</p>
-<p class="offline-lyric">从那里降落（降落）</p>
-<p class="offline-lyric">多少不能原谅的错却不能重</p></section>
-<section class="offline-stanza"><h3>末段副歌 <time>03:09</time></h3>
-<p class="offline-lyric">我从来没想过</p>
-<p class="offline-lyric">我会这样做</p>
+<p class="offline-lyric">从来没爱过</p>
+<p class="offline-lyric">从来没有爱过那么认真</p>
+<p class="offline-lyric">从哪里 起飞 降落</p>
+<p class="offline-lyric">Wooh</p></section>
+<section class="offline-stanza"><h3>末段副歌 <time>03:16</time></h3>
+<p class="offline-lyric">我从来没想过 我会这样做</p>
 <p class="offline-lyric">从来没爱过（爱过）</p>
 <p class="offline-lyric">所以爱错（所以爱错）</p>
-<p class="offline-lyric">从那里起飞（爱错 爱错 爱错baby）</p>
-<p class="offline-lyric">从那里降落</p>
-<p class="offline-lyric">多少不能原谅的错</p>
-<p class="offline-lyric">请你原谅我的 爱错</p></section>
+<p class="offline-lyric">我从哪里降落（爱错 爱错 爱错）</p>
+<p class="offline-lyric">baby</p>
+<p class="offline-lyric">请你原谅我的爱错</p></section>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-love">下一项 · 《爱错》后串词 ↓</a></nav></article>
 <article class="offline-item" id="offline-mc-love"><p class="offline-meta">唱完《爱错》后讲</p><h2>《爱错》后串词</h2>
 <p class="script-paragraph">谢谢大家</p>
@@ -750,7 +760,6 @@ body.stage-ready #offline-reader { display: none; }
 <p class="script-paragraph">2. 不知道 —— 可惜了 那我们奖品还是得送 我们换个题 —— 问现场有没有喜欢孙燕姿的，说出孙燕姿的三首歌</p>
 <p class="script-paragraph">接下来 Suri演唱一首《我怀念的》 听这首歌的时候 我还在上小学 刚学会上厕所  所以我相信大家也非常耳熟能详  欢迎suri</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-remember">下一项 · 我怀念的 ↓</a></nav></article>
-<p class="offline-interlude offline-break">猜歌互动</p>
 <article class="offline-item" id="offline-remember"><p class="offline-meta">孙燕姿</p><h2>我怀念的</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
 </section>
@@ -842,6 +851,19 @@ body.stage-ready #offline-reader { display: none; }
 <p class="offline-lyric">所以我</p>
 <p class="offline-lyric">没有哭</p>
 <p class="offline-lyric">没有说</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-guess">下一项 · 猜歌送礼 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-guess"><p class="offline-meta">唱完《我怀念的》后讲</p><h2>猜歌送礼</h2>
+<p class="script-paragraph">JoJo：谢谢大家！我们先缓一口气，接下来跟大家玩一个小游戏——听前奏，猜歌名。</p>
+<p class="script-paragraph">Suri：这一轮轮到我们的两位吉他手和键盘手出题。他们会现场弹六首歌的前奏，每猜对一首，就送出一套礼物。</p>
+<p class="script-direction">［举起一套奖品。］</p>
+<p class="script-paragraph">Suri：就是这个，罗兰的杯子加袋子，两个一起送，一共六套。</p>
+<p class="script-paragraph">JoJo：规则很简单：前奏一响，只要你觉得自己知道了，就马上举手，不用等弹完。</p>
+<p class="script-paragraph">我们会请最先看到举手的那位朋友回答。</p>
+<p class="script-paragraph">不过先别直接喊答案，我们点到你，你再说，给其他朋友留一点悬念。</p>
+<p class="script-paragraph">Suri：说对歌名就能拿到礼物。如果第一位答错了，我们就从其他还举着手的朋友里，再随机选一位来回答。</p>
+<p class="script-paragraph">JoJo：所以第一下没抢到，也不一定就没机会。现场人比较多，举手可以明显一点，后面的朋友我们也会看。</p>
+<p class="script-paragraph">JoJo：拿到过礼物的朋友，后面就先不用举手啦，给其他朋友一点机会，我们雨露均沾一点。</p>
+<p class="script-paragraph">Suri：好，大家准备好了吗？</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-expose">下一项 · 拆穿 ↓</a></nav></article>
 <article class="offline-item" id="offline-expose"><p class="offline-meta">周菲戈</p><h2>拆穿</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
@@ -940,6 +962,11 @@ body.stage-ready #offline-reader { display: none; }
 <p class="offline-lyric">原来是我太认真</p></section>
 <section class="offline-stanza"><h3>尾奏 <time>03:50</time></h3>
 </section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-suri-surfer">下一项 · Suri · 《浪人的…》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-suri-surfer"><p class="offline-meta">《浪人的…》结束后由 Suri 讲</p><h2>Suri · 《浪人的…》后串词</h2>
+<p class="script-paragraph">刚才这首《浪人的》，有没有让大家有一种 在海边散步 感受到海风拂面，和自由的气息？</p>
+<p class="script-paragraph">大家觉得，成年人最奢侈的自由是什么？在我看来，除了财富自由和时间自由，更奢侈的是，如果现在我的工作手机里的knock在响的话，我可以选择不看～</p>
+<p class="script-paragraph">不过没关系，虽然现实中我们还要打卡开会写周报，但至少在音乐里，在此时此刻，我们可以拥有一点自由。所以接下来这首歌《我管你》，送给现场所有不愿受拘束的人～让我们燥起来</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-i-dont-care">下一项 · 我管你 ↓</a></nav></article>
 <article class="offline-item" id="offline-i-dont-care"><p class="offline-meta">华晨宇</p><h2>我管你</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
@@ -1075,6 +1102,10 @@ body.stage-ready #offline-reader { display: none; }
 <section class="offline-stanza"><h3>尾句 <time>03:49</time></h3>
 <p class="offline-lyric">今夜你会不会在远方</p>
 <p class="offline-lyric">为我守望 守望</p></section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-suri-achu">下一项 · Suri · 《阿楚姑娘》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-suri-achu"><p class="offline-meta">《阿楚姑娘》结束后由 Suri 讲</p><h2>Suri · 《阿楚姑娘》后串词</h2>
+<p class="script-paragraph">刚才这首歌，希望大家喜欢。</p>
+<p class="script-paragraph">接下来，我想带大家去一个很浪漫的地方。只需要闭上眼睛，跟着音乐就可以到达。月牙湾这首歌，如果大家有会唱的，请跟着唱～</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-crescent">下一项 · 月牙湾 ↓</a></nav></article>
 <article class="offline-item" id="offline-crescent"><p class="offline-meta">F.I.R. 飞儿乐团</p><h2>月牙湾</h2>
 <section class="offline-stanza"><h3>前奏 <time>00:00</time></h3>
@@ -1135,6 +1166,15 @@ body.stage-ready #offline-reader { display: none; }
 <p class="offline-lyric">向着我爱的人 追吧</p></section>
 <section class="offline-stanza"><h3>尾奏 <time>04:37</time></h3>
 </section>
+<nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-suri-crescent">下一项 · Suri · 《月牙湾》后串词 ↓</a></nav></article>
+<article class="offline-item" id="offline-mc-suri-crescent"><p class="offline-meta">《月牙湾》结束后由 Suri 讲</p><h2>Suri · 《月牙湾》后串词</h2>
+<p class="script-paragraph">谢谢大家！</p>
+<p class="script-paragraph">从第一首歌到现在，我们一起走过了好几段不同的情绪。有过心动和期待，也有过遗憾和不舍，还有那些关于自由、关于远方的想象。</p>
+<p class="script-paragraph">其实我一直觉得，音乐最奇妙的地方就在于，同一段旋律，有人听见的是自己的故事，有人想起的是某个熟悉的人，也有人只是单纯地享受着此刻。</p>
+<p class="script-paragraph">但无论大家今晚感受到什么，我都希望这些音乐，能成为这个夜晚里一份特别的记忆。</p>
+<p class="script-paragraph">也很感谢在座的每一位，愿意把今晚的时间留给我们，和我们一起度过这样一个夜晚。因为有你们的聆听和回应，这个夜晚有了更完整的意义。</p>
+<p class="script-paragraph">那么，最后一首歌，让我们请出男主唱JoJo。</p>
+<p class="script-direction">［接 JoJo 的《鸟毛》前奏串词。］</p>
 <nav class="offline-jumps" aria-label="本段导航"><a href="#offline-setlist">回歌单 ↑</a><a href="#offline-mc-birds-intro">下一项 · 《鸟毛》前奏串词 ↓</a></nav></article>
 <article class="offline-item" id="offline-mc-birds-intro"><p class="offline-meta">《BIRDS OF A FEATHER》前奏响起时讲</p><h2>《鸟毛》前奏串词</h2>
 <p class="script-direction">（《BIRDS OF A FEATHER》 前奏响起，乐手每两节依次加入）</p>
@@ -1202,21 +1242,27 @@ body.stage-ready #offline-reader { display: none; }
 <li><a href="#offline-north">01 一路向北</a></li>
 <li class="offline-script-link"><a href="#offline-mc-north">《一路向北》后串词</a></li>
 <li><a href="#offline-dear-john">02 Dear John</a></li>
+<li class="offline-script-link"><a href="#offline-mc-suri-dear-john">Suri · 《Dear John》后串词</a></li>
 <li><a href="#offline-black-tangerine">03 黑色柳丁</a></li>
+<li class="offline-script-link"><a href="#offline-mc-suri-black-tangerine">Suri · 《黑色柳丁》后串词</a></li>
 <li><a href="#offline-regular-friends">04 普通朋友</a></li>
 <li class="offline-script-link"><a href="#offline-mc-friends">《普通朋友》后串词</a></li>
 <li><a href="#offline-bubble">05 泡沫</a></li>
+<li class="offline-script-link"><a href="#offline-mc-suri-bubble">Suri · 《泡沫》后串词</a></li>
 <li><a href="#offline-wrong-love">06 爱错</a></li>
 <li class="offline-script-link"><a href="#offline-mc-love">《爱错》后串词</a></li>
-<li class="offline-interlude">猜歌互动</li>
 <li><a href="#offline-remember">07 我怀念的</a></li>
+<li class="offline-script-link"><a href="#offline-mc-guess">猜歌送礼</a></li>
 <li><a href="#offline-expose">08 拆穿</a></li>
 <li class="offline-script-link"><a href="#offline-mc-expose">《拆穿》后串词</a></li>
 <li><a href="#offline-surfer">09 浪人的…</a></li>
+<li class="offline-script-link"><a href="#offline-mc-suri-surfer">Suri · 《浪人的…》后串词</a></li>
 <li><a href="#offline-i-dont-care">10 我管你</a></li>
 <li class="offline-script-link"><a href="#offline-mc-care">《我管你》后串词</a></li>
 <li><a href="#offline-achu">11 阿楚姑娘</a></li>
+<li class="offline-script-link"><a href="#offline-mc-suri-achu">Suri · 《阿楚姑娘》后串词</a></li>
 <li><a href="#offline-crescent">12 月牙湾</a></li>
+<li class="offline-script-link"><a href="#offline-mc-suri-crescent">Suri · 《月牙湾》后串词</a></li>
 <li class="offline-script-link"><a href="#offline-mc-birds-intro">《鸟毛》前奏串词</a></li>
 <li><a href="#offline-birds">13 鸟毛（BIRDS OF A FEATHER）</a></li>
 <li class="offline-script-link"><a href="#offline-mc-birds-close">结束致谢</a></li>
@@ -1428,12 +1474,11 @@ const tracks = [
       [141.19, '桥段'], [166.10, '末段副歌'], [195.27, '副歌延续'], [224.73, '尾段人声'], [250.90, '尾奏']
     ]),
 
-  referenceTrack('wrong-love', '爱错', '王力宏', '《心中的日月》录音室版', 239,
-    'https://music-tw.line.me/track/7165348010',
-    'https://zh.followlyrics.com/lyrics/3134586/ai-cuo',
+  referenceTrack('wrong-love', '爱错', '王力宏 × 单依纯', '现场合唱版', 252,
+    'https://music-tw.line.me/track/7800643001',
+    'https://www.gequhai.com/play/5861062',
     [
-      [0, '前奏'], [13.24, '主歌 1'], [45.01, '副歌 1'], [79.05, '主歌 2'],
-      [110.71, '副歌 2'], [141.83, '桥段'], [163.21, '副歌 3'], [189.24, '末段副歌']
+      [0, '前奏'], [14, '主歌 1'], [46, '副歌 1'], [79, '主歌 2'], [111, '副歌 2'], [142, '桥段'], [169, '副歌 3'], [196, '末段副歌']
     ], { aliases: ['愛錯'] }),
 
   referenceTrack('remember', '我怀念的', '孙燕姿', '《逆光》录音室版', 289,
@@ -1501,7 +1546,7 @@ const bundledLyrics = {
   "black-tangerine": "[00:00.000]【前奏】\n\n[00:17.520]【主歌 1】\n[00:17.520]今天我心情有一点怪怪\n[00:22.350]可是说不出到底为什么\n[00:25.540]好像有一些悲伤的征兆\n[00:29.360]可是病因不知道\n[00:33.898]头上有橘色的加州阳光\n[00:36.847]我的口袋只有黑色的柳丁\n[00:39.847]我只有一个蓝色的感觉\n[00:44.127]不要问我为什么\n\n[00:49.647]【预副歌 1】\n[00:49.647]很想说 但又觉得没有话好说\n[00:57.157]我只恨我自己 逃不出这监狱\n[01:04.570]或许我 是个没有出息的小虫\n[01:11.937]不该一直作梦 你不是个英雄\n\n[01:20.137]【副歌 1】\n[01:20.137]叶子用坠落证明换季\n[01:23.858]可我昏昏沉沉没有办法醒\n[01:29.480]你愿意做个英雄\n[01:32.167]还是你会要放弃\n[01:35.407]天是亮的却布满乌云\n[01:39.489]所有焦距被闪光判了死刑\n[01:43.870]你想做什么英雄\n[01:47.369]我看你不过是佣兵\n\n[01:52.580]【副歌尾句 1】\n[01:52.580]我只想哭 只想哭 只想哭\n[01:55.280]我只想哭 只想哭 只想哭\n\n[02:05.437]【主歌 2】\n[02:05.437]今天一起床我就头痛\n[02:10.590]不管吃了几瓶药都没有用\n[02:12.789]心情有一点莫名的焦躁\n[02:17.500]你离我越远越好\n[02:20.240]外面有橘色的加州阳光\n[02:24.400]我却躲在自己孤独的黑洞\n[02:27.900]我只有一个小小的要求\n[02:31.770]就是请你leave me alone\n\n[02:37.700]【预副歌 2】\n[02:37.700]很想说 但又觉得没有话好说\n[02:44.720]我只恨我自己 逃不出这监狱\n[02:52.390]或许我 是个没有出息的小虫\n[02:59.350]不该一直作梦 你不是个英雄\n\n[03:07.900]【副歌 2】\n[03:07.900]叶子用坠落证明换季\n[03:11.900]可我昏昏沉沉没有办法醒\n[03:16.900]你愿意做个英雄\n[03:20.200]还是你会要放弃\n[03:22.820]天是亮的却布满乌云\n[03:26.800]所有焦距被闪光判了死刑\n[03:31.080]你想做什么英雄\n[03:35.300]我看你不过是佣兵\n\n[03:39.200]【副歌尾句 2】\n[03:39.200]我只想哭 只想哭 只想哭\n[03:42.110]我只想哭 只想哭 只想哭\n\n[03:53.700]【尾声】\n[03:53.700]今天我心情有一点烂烂\n[03:57.600]可是说不出到底为什么\n[04:00.150]好像有一点悲哀的征兆\n[04:04.790]可是病因不知道\n\n[04:08.600]【结尾反复】\n[04:08.600]我只想哭 只想哭 只想哭\n[04:12.700]我只想哭 只想哭 只想哭",
   "regular-friends": "[00:00.000]【前奏】\n\n[00:19.000]【主歌 1】\n[00:19.000]等待\n[00:22.000]我随时随地在等待\n[00:27.000]做你感情上的依赖\n[00:33.000]我没有任何的疑问\n[00:37.000]这是爱\n\n[00:41.000]【主歌续段 1】\n[00:41.000]我猜\n[00:43.000]你早就想要说明白\n[00:49.000]我觉得自己好失败\n[00:54.000]从天堂掉落到深渊\n[00:59.000]多无奈\n\n[01:02.000]【预副歌 1】\n[01:02.000]我愿意改变 (what can I do?)\n[01:08.000]重新再来一遍(just give me change)\n[01:14.000]我无法只是普通朋友\n[01:19.000]感情已那么深\n[01:21.000]叫我怎么能收手\n\n[01:26.000]【副歌 1】\n[01:26.000]但你说\n[01:29.000]I only want to be your friend\n[01:34.000]做个朋友\n[01:37.000]我在\n[01:40.000]你心中只是just a friend\n[01:45.000]不是情人\n[01:48.000]我感激你对我这样的坦白\n[01:53.000]但我给你的爱暂时收不回来\n[01:59.000]So I\n[02:03.000]我不能只是be your friend\n[02:09.000]I just can't be your friend\n\n[02:15.000]【主歌 2】\n[02:15.000]我猜\n[02:18.000]你早就想要说明白\n[02:23.000]我觉得自己好失败\n[02:29.000]从天堂掉落到深渊\n[02:33.000]多无奈\n\n[02:37.000]【预副歌 2】\n[02:37.000]我愿意改变 (what can I do?)\n[02:42.000]重新再来一遍(just give me change)\n[02:47.000]我无法只是普通朋友\n[02:53.000]感情已那么深\n[02:55.000]叫我怎么能收手\n\n[03:01.000]【副歌 2】\n[03:01.000]但你说\n[03:04.000]I only want to be your friend\n[03:08.000]做个朋友\n[03:12.000]我在\n[03:15.000]你心中只是just a friend\n[03:19.000]不是情人\n[03:23.000]我感激你对我这样的坦白\n[03:28.000]但我给你的爱暂时收不回来\n[03:33.000]So I\n[03:36.000]我不能只是be your friend\n[03:47.000]I just can't be your friend\n\n[03:51.000]【尾声】\n[03:51.000]no,no,no,\n[03:57.000]我不能只是做你的朋友\n[04:01.000]不能只是做普通朋友",
   "bubble": "[00:00.000]【前奏】\n\n[00:00.809]【主歌 1】\n[00:00.809]阳光下的泡沫 是彩色的 就像被骗的我 是幸福的\n[00:17.640]追究什么对错 你的谎言 基于你还爱我\n\n[00:28.119]【副歌 1】\n[00:28.119]美丽的泡沫 虽然一刹花火 你所有承诺 虽然都太脆弱\n[00:42.080]但爱像泡沫 如果能够看破 有什么难过\n\n[00:57.530]【主歌 2】\n[00:57.530]早该知道泡沫 一触就破 就像已伤的心 不胜折磨\n[01:11.340]也不是谁的错 谎言再多 基于你还爱我\n\n[01:24.500]【副歌 2】\n[01:24.500]美丽的泡沫 虽然一刹花火 你所有承诺 虽然都太脆弱\n[01:39.100]爱本是泡沫 如果能够看破 有什么难过\n\n[01:52.929]【副歌变化】\n[01:52.929]再美的花朵 盛开过就凋落 再亮眼的星 一闪过就坠落\n[02:06.950]爱本是泡沫 如果能够看破 有什么难过\n\n[02:21.189]【桥段】\n[02:21.189]为什么难过 有什么难过 为什么难过\n\n[02:46.099]【末段副歌】\n[02:46.099]全都是泡沫 只一刹的花火 你所有承诺 全部都太脆弱\n[03:00.460]而你的轮廓 怪我没有看破 才如此难过\n\n[03:15.269]【副歌延续】\n[03:15.269]相爱的把握 要如何再搜索 相拥着寂寞 难道就不寂寞\n[03:29.720]爱本是泡沫 怪我没有看破 才如此难过\n\n[03:44.729]【尾段人声】\n[03:44.729]在雨下的泡沫 一触就破 当初炽热的心 早以沉没\n[03:58.840]说什么你爱我 如果骗我 我宁愿你沉默\n\n[04:10.900]【尾奏】",
-  "wrong-love": "[00:00.000]【前奏】\n\n[00:13.240]【主歌 1】\n[00:13.240]北风毫不留情\n[00:17.420]把叶子吹落\n[00:19.950]坠落的它选择了逃脱\n[00:26.460]叶子失去消息\n[00:29.530]风才感觉寂寞\n[00:35.530]整个冬天\n[00:38.860]北风的痛没人能说\n\n[00:45.010]【副歌 1】\n[00:45.010]我从来没想过\n[00:48.740]我会这样做\n[00:51.970]从来没爱过\n[00:55.300]所以爱错\n[00:58.120]我从哪里起飞\n[01:01.850]从哪里降落\n[01:05.180]多少不能原谅的错 却不能重来过\n\n[01:19.050]【主歌 2】\n[01:19.050]翻开回忆角落\n[01:23.240]完美的生活\n[01:25.710]以为幸福都可以掌握\n[01:32.260]仔细回味当初那个故事背后\n[01:40.880]喔 原来是我\n[01:44.570]犯下从没承认的错\n\n[01:50.710]【副歌 2】\n[01:50.710]我从来没想过\n[01:54.440]我会这样做\n[01:57.720]从来没爱过 所以爱错\n[02:03.870]我 从那里起飞\n[02:07.610]从那里降落\n[02:10.890]多少不能原谅的错却不能重来过\n\n[02:21.830]【桥段】\n[02:21.830]在这少了你的世界\n[02:26.780]喔 找不会那些感觉\n[02:33.130]其实我不想 道别\n[02:40.440]那些过去\n\n[02:43.210]【副歌 3】\n[02:43.210]我从来没想过\n[02:47.050]我会这样做\n[02:50.230]从来没爱过 （从来没有爱过那么认真）\n[02:57.990]我从那里起飞\n[03:00.160]从那里降落（降落）\n[03:04.240]多少不能原谅的错却不能重\n\n[03:09.240]【末段副歌】\n[03:09.240]我从来没想过\n[03:13.330]我会这样做\n[03:16.610]从来没爱过（爱过）\n[03:20.540]所以爱错（所以爱错）\n[03:23.310]从那里起飞（爱错 爱错 爱错baby）\n[03:29.760]从那里降落\n[03:31.680]多少不能原谅的错\n[03:33.550]请你原谅我的 爱错",
+  "wrong-love": "[00:00.00]【前奏】\n\n[00:14.00]【主歌 1】\n[00:14.00]北风毫不留情\n[00:18.00]把叶子吹落\n[00:20.00]脆弱的她选择了逃脱\n[00:27.00]叶子失去消息\n[00:30.00]风才感觉寂寞\n[00:36.00]整个冬天\n[00:39.00]北风的痛没人能说\n\n[00:46.00]【副歌 1】\n[00:46.00]我从来没想过\n[00:49.00]我会这样做\n[00:52.00]从来没爱过\n[00:56.00]所以爱错\n[00:59.00]我从哪里起飞\n[01:02.00]从哪里降落\n[01:06.00]多少不能原谅的错\n[01:09.00]却不能重来过\n\n[01:19.00]【主歌 2】\n[01:19.00]翻开回忆角落\n[01:24.00]完美的生活\n[01:26.00]以为幸福都可以掌握\n[01:33.00]仔细回味当初\n[01:36.00]那个故事背后\n[01:40.00]Oh 原来是我\n[01:45.00]犯下从没承认的错\n\n[01:51.00]【副歌 2】\n[01:51.00]我从来没想过\n[01:55.00]我会这样做\n[01:58.00]从来没爱过\n[02:01.00]所以爱错\n[02:04.00]我从哪里起飞\n[02:08.00]从哪里降落\n[02:11.00]多少不能原谅的错\n[02:15.00]却不能重来过\n\n[02:22.00]【桥段】\n[02:22.00]在这少了你的世界 Oh\n[02:29.00]找不回那些感觉\n[02:33.00]其实我不想道别\n[02:41.00]那些过去\n[02:45.00]那些过去\n\n[02:49.00]【副歌 3】\n[02:49.00]我从来没想过\n[02:53.00]我会这样做\n[02:56.00]从来没爱过\n[02:59.00]从来没有爱过那么认真\n[03:06.00]从哪里 起飞 降落\n[03:13.00]Wooh\n\n[03:16.00]【末段副歌】\n[03:16.00]我从来没想过 我会这样做\n[03:23.00]从来没爱过（爱过）\n[03:26.00]所以爱错（所以爱错）\n[03:32.00]我从哪里降落（爱错 爱错 爱错）\n[03:35.00]baby\n[03:38.00]请你原谅我的爱错",
   "remember": "[00:00.000]【前奏】\n\n[00:16.760]【主歌 1】\n[00:16.760]我问为什么\n[00:18.850]那女孩传简讯给我\n[00:24.100]而你为什么\n[00:26.190]不解释低着头沉默\n[00:30.460]我该相信你很爱我\n[00:34.240]不愿意敷衍我\n[00:37.570]还是明白\n[00:38.960]你已不想挽回什么\n\n[00:46.030]【预副歌 1】\n[00:46.030]想问为什么\n[00:48.110]我不再是你的快乐\n[00:53.180]可是为什么\n[00:55.250]却苦笑说我都懂了\n[00:59.290]自尊常常将人拖着\n[01:03.000]把爱都走曲折\n[01:06.260]假装了解是怕\n[01:08.450]真相太赤裸裸\n[01:11.720]狼狈比失去难受\n\n[01:14.220]【副歌 1】\n[01:14.220]我怀念的是无话不说\n[01:17.650]我怀念的是一起作梦\n[01:21.140]我怀念的是争吵以后\n[01:24.220]还是想要爱你的冲动\n[01:28.480]我记得那年生日\n[01:31.790]也记得那一首歌\n[01:35.060]记得那片星空\n[01:37.040]最紧的右手\n[01:38.860]最暖的胸口\n[01:40.390]谁记得\n[01:43.750]谁忘了\n\n[01:56.430]【预副歌 2】\n[01:56.430]想问为什么\n[01:58.420]我不再是你的快乐\n[02:03.250]可是为什么\n[02:05.310]却苦笑说我都懂了\n[02:09.340]自尊常常将人拖着\n[02:13.150]把爱都走曲折\n[02:16.250]假装了解是怕\n[02:18.540]真相太赤裸裸\n[02:21.840]狼狈比失去难受\n\n[02:24.220]【副歌 2】\n[02:24.220]我怀念的是无话不说\n[02:27.620]我怀念的是一起作梦\n[02:31.050]我怀念的是争吵以后\n[02:34.060]还是想要爱你的冲动\n[02:38.240]我记得那年生日\n[02:41.590]也记得那一首歌\n[02:44.740]记得那片星空\n[02:46.680]最紧的右手\n[02:48.430]最暖的胸口\n[02:49.900]谁忘了\n\n[02:51.680]【副歌变化】\n[02:51.680]我怀念的是无言感动\n[02:55.030]我怀念的是绝对炽热\n[02:58.470]我怀念的是你很激动\n[03:01.500]求我原谅抱得我都痛\n[03:05.680]我记得你在背后\n[03:09.020]也记得我颤抖着\n[03:12.220]记得感觉汹涌\n[03:14.150]最美的烟火\n[03:15.930]最长的相拥\n\n[03:17.340]【桥段】\n[03:17.340]谁爱得太自由\n[03:20.770]谁过头太远了\n[03:24.180]谁要走我的心\n[03:27.620]谁忘了那就是承诺\n[03:31.060]谁自顾自地走\n[03:34.380]谁忘了看着我\n[03:37.870]谁让爱变沉重\n[03:41.340]谁忘了要给你温柔\n\n[03:56.680]【末段副歌】\n[03:56.680]我怀念的\n[03:59.220]我还有想要爱你的冲动\n[04:03.770]我记得那年生日\n[04:07.150]也记得那一首歌\n[04:10.280]记得那片星空\n[04:12.220]最紧的右手\n[04:13.880]最暖的胸口\n\n[04:15.300]【尾段人声】\n[04:15.300]我放手\n[04:18.720]我让座\n[04:22.060]假洒脱\n[04:25.430]谁懂我多么不舍得\n[04:29.410]太爱了\n[04:32.250]所以我\n[04:35.660]没有哭\n[04:39.000]没有说",
   "expose": "[00:00.000]【前奏】\n\n[00:08.390]【主歌】\n[00:08.390]我 不喜欢说话\n[00:14.990]不喜欢逛街\n[00:18.870]却只喜欢沉默\n[00:23.980]在 每一个清晨\n[00:30.350]会默默祈祷\n[00:34.460]每天会更美好\n\n[00:40.530]【预副歌 1】\n[00:40.530]光阴荏苒有谁还记得\n[00:48.070]那时天空准确的颜色\n[00:55.920]听说真爱会出现在\n[01:01.610]绚烂自私而无尽头的脑海\n\n[01:12.310]【副歌 1】\n[01:12.310]谁会来拆穿你编的谎言\n[01:19.980]谁会去放开又独自离开\n[01:27.820]我想谁都懂\n[01:31.420]有个人你也不想再伤害\n[01:35.570]我也不会再等着你回来\n\n[01:44.000]【间奏】\n\n[02:01.560]【预副歌 2】\n[02:01.560]光阴荏苒有谁还记得\n[02:09.430]那时天空准确的颜色\n[02:17.180]听说真爱会出现在\n[02:22.990]绚烂自私而无尽头的脑海\n\n[02:33.690]【副歌 2】\n[02:33.690]谁会来拆穿你给的谎言\n[02:41.160]谁会去放开又独自离开\n[02:49.180]我想谁都懂\n[02:52.620]有个人你也不想再伤害\n[02:56.800]我也不会再等着你回来\n\n[03:07.000]【尾奏】",
   "surfer": "[00:00.000]【前奏】\n\n[00:27.890]【主歌 1】\n[00:27.890]沙滩黄昏的色温 即将入夜的时分\n[00:32.490]空气不再闷沉沉\n[00:35.000]月亮从海平线慢吞吞\n[00:40.610]你依然还是没出现 不是说要约\n\n[00:47.340]【主歌 2】\n[00:47.340]小屋里欢乐气氛 男男女女的笑声\n[00:52.100]我心不在焉等着\n[00:54.530]期待明天的浪顺顺的\n[01:00.140]你依然还是没出现 我回车上睡\n\n[01:06.650]【预副歌 1】\n[01:06.650]怀疑天气预报 准不准\n[01:11.370]像是现在心情 微微冷\n[01:16.200]难道你不知道 等你一整天 好闷\n\n[01:25.870]【副歌 1】\n[01:25.870]是我太认真\n[01:28.340]无法像你一样 随心所欲到处混\n[01:33.240]酒精蔓延全身\n[01:35.790]误解你笑容 你的眼神太迷人\n[01:45.500]是我太认真\n[01:47.930]那一夜的派对 大伙疯狂到清晨\n[01:52.810]月光如同迷药\n[01:55.350]误解你的吻 原来是我太认真\n\n[02:10.380]【预副歌 2】\n[02:10.380]怀疑天气预报 准不准\n[02:15.120]像是现在心情 微微冷\n[02:19.780]难道你不知道 等你一整天 好闷\n\n[02:29.580]【副歌 2】\n[02:29.580]是我太认真\n[02:32.020]无法像你一样 随心所欲到处混\n[02:36.900]酒精蔓延全身\n[02:39.430]误解你笑容 你的眼神太迷人\n[02:49.200]是我太认真\n[02:51.560]那一夜的派对 大伙疯狂到清晨\n[02:56.430]月光如同迷药\n[02:59.000]误解你的吻 原来是我太认真\n\n[03:08.780]【末段副歌】\n[03:08.780]是我太认真\n[03:11.160]无法像你一样 随心所欲到处混\n[03:16.080]酒精蔓延全身\n[03:18.610]误解你笑容 你的眼神太迷人\n[03:28.370]是我太认真\n[03:30.750]那一夜的派对 大伙疯狂到清晨\n[03:35.650]月光如同迷药\n[03:38.200]误解你的吻 原来是我太认真\n\n[03:45.610]【尾句】\n[03:45.610]原来是我太认真\n[03:49.400]原来是我太认真\n\n[03:50.000]【尾奏】",
@@ -1619,6 +1664,60 @@ async function readLyricFile(file) {
 
 const scripts = [
   {
+    "id": "mc-suri-dear-john",
+    "placement": "after",
+    "trackId": "dear-john",
+    "title": "Suri · 《Dear John》后串词",
+    "label": "Suri",
+    "cue": "《Dear John》结束后由 Suri 讲",
+    "body": "Hello，大家好，我是Suri～\n\n刚才这首《Dear John》，是我加入双休日乐队后 排练的第一首曲目。大家觉得怎么样？\n\n不知道大家有没有注意到，这首歌的编曲特别复古，一下子就把人带回了千禧年代。其实这首歌还真是一首有些年头的经典老歌。它收录于台湾歌手比莉1999年发行的专辑当中。这首歌最先是日文歌曲，经过重新编曲和演绎，变成了我们今天听到的这个版本。所以，今天能在现场和大家一起重新演绎这首将近三十年前的作品，我觉得是一件很浪漫的事情。\n\n说到那个时期，我们不得不说一位华语乐坛的音乐鬼才。\n\n他的唱功、创作和节奏感都有着非常鲜明的个人风格。大家猜猜他是谁？\n\n没错，就是陶喆！现场有没有喜欢陶喆的朋友？\n\n那接下来这份礼物就有地方送了～来一个小挑战，十秒钟之内说出三首不同的陶喆的歌曲，说歌名就行。谁来？有把握的举手！\n\n好的，就这位朋友，不着急，等你准备好我们再开始。\n\n可以，这三首！这套送给你！\n\n接下来这首歌黑色柳丁，希望大家跟着一起摇起来！"
+  },
+  {
+    "id": "mc-suri-black-tangerine",
+    "placement": "after",
+    "trackId": "black-tangerine",
+    "title": "Suri · 《黑色柳丁》后串词",
+    "label": "Suri",
+    "cue": "《黑色柳丁》结束后由 Suri 讲",
+    "body": "大家有没有发现，陶喆的歌是不是特别容易让人上头？陶喆有一种很神奇的能力，就是能把感情关系唱得特别复杂。比如两个人明明每天聊天、每天见面，问起来却说：我们只是普通朋友。今天现场有没有和普通朋友一起来的？～～～～接下来这首歌，送给今天来到现场的所有 普通朋友～～～"
+  },
+  {
+    "id": "mc-suri-bubble",
+    "placement": "after",
+    "trackId": "bubble",
+    "title": "Suri · 《泡沫》后串词",
+    "label": "Suri",
+    "cue": "《泡沫》结束后由 Suri 讲",
+    "body": "谢谢大家！刚才这首泡沫，听过瘾了吗。哈哈，我觉得今天的情歌浓度有点超标了。不过既然都唱到这里了，那不如再来一首。接下来就请出我们的男主唱，希望大家能喜欢这首不太一样的《爱错》～"
+  },
+  {
+    "id": "mc-suri-surfer",
+    "placement": "after",
+    "trackId": "surfer",
+    "title": "Suri · 《浪人的…》后串词",
+    "label": "Suri",
+    "cue": "《浪人的…》结束后由 Suri 讲",
+    "body": "刚才这首《浪人的》，有没有让大家有一种 在海边散步 感受到海风拂面，和自由的气息？\n\n大家觉得，成年人最奢侈的自由是什么？在我看来，除了财富自由和时间自由，更奢侈的是，如果现在我的工作手机里的knock在响的话，我可以选择不看～\n\n不过没关系，虽然现实中我们还要打卡开会写周报，但至少在音乐里，在此时此刻，我们可以拥有一点自由。所以接下来这首歌《我管你》，送给现场所有不愿受拘束的人～让我们燥起来"
+  },
+  {
+    "id": "mc-suri-achu",
+    "placement": "after",
+    "trackId": "achu",
+    "title": "Suri · 《阿楚姑娘》后串词",
+    "label": "Suri",
+    "cue": "《阿楚姑娘》结束后由 Suri 讲",
+    "body": "刚才这首歌，希望大家喜欢。\n\n接下来，我想带大家去一个很浪漫的地方。只需要闭上眼睛，跟着音乐就可以到达。月牙湾这首歌，如果大家有会唱的，请跟着唱～"
+  },
+  {
+    "id": "mc-suri-crescent",
+    "placement": "after",
+    "trackId": "crescent",
+    "title": "Suri · 《月牙湾》后串词",
+    "label": "Suri",
+    "cue": "《月牙湾》结束后由 Suri 讲",
+    "body": "谢谢大家！\n\n从第一首歌到现在，我们一起走过了好几段不同的情绪。有过心动和期待，也有过遗憾和不舍，还有那些关于自由、关于远方的想象。\n\n其实我一直觉得，音乐最奇妙的地方就在于，同一段旋律，有人听见的是自己的故事，有人想起的是某个熟悉的人，也有人只是单纯地享受着此刻。\n\n但无论大家今晚感受到什么，我都希望这些音乐，能成为这个夜晚里一份特别的记忆。\n\n也很感谢在座的每一位，愿意把今晚的时间留给我们，和我们一起度过这样一个夜晚。因为有你们的聆听和回应，这个夜晚有了更完整的意义。\n\n那么，最后一首歌，让我们请出男主唱JoJo。\n\n［接 JoJo 的《鸟毛》前奏串词。］"
+  },
+  {
     "id": "mc-north",
     "placement": "after",
     "trackId": "north",
@@ -1644,6 +1743,15 @@ const scripts = [
     "label": "现场问答",
     "cue": "唱完《爱错》后讲",
     "body": "谢谢大家\n\n这首 爱错 其实是单依纯和王力宏的版本啊 现场有没有单依纯的粉丝啊？\n\n诶那我考考你啊  单依纯的演唱会  她会跟粉丝说 欢迎你们登陆什么岛？  \n\n1. 答对了 —— 那很本质了 喜欢单依纯 你很有品    那我们上点难度好不好 能不能在十秒钟说出单依纯的三首歌 要原创哦  \n\n2. 不知道 —— 可惜了 那我们奖品还是得送 我们换个题 —— 问现场有没有喜欢孙燕姿的，说出孙燕姿的三首歌\n\n\n接下来 Suri演唱一首《我怀念的》 听这首歌的时候 我还在上小学 刚学会上厕所  所以我相信大家也非常耳熟能详  欢迎suri"
+  },
+  {
+    "id": "mc-guess",
+    "placement": "after",
+    "trackId": "remember",
+    "title": "猜歌送礼",
+    "label": "JoJo × Suri",
+    "cue": "唱完《我怀念的》后讲",
+    "body": "JoJo：谢谢大家！我们先缓一口气，接下来跟大家玩一个小游戏——听前奏，猜歌名。\n\nSuri：这一轮轮到我们的两位吉他手和键盘手出题。他们会现场弹六首歌的前奏，每猜对一首，就送出一套礼物。\n\n［举起一套奖品。］\n\nSuri：就是这个，罗兰的杯子加袋子，两个一起送，一共六套。\n\nJoJo：规则很简单：前奏一响，只要你觉得自己知道了，就马上举手，不用等弹完。\n\n我们会请最先看到举手的那位朋友回答。\n\n不过先别直接喊答案，我们点到你，你再说，给其他朋友留一点悬念。\n\nSuri：说对歌名就能拿到礼物。如果第一位答错了，我们就从其他还举着手的朋友里，再随机选一位来回答。\n\nJoJo：所以第一下没抢到，也不一定就没机会。现场人比较多，举手可以明显一点，后面的朋友我们也会看。\n\nJoJo：拿到过礼物的朋友，后面就先不用举手啦，给其他朋友一点机会，我们雨露均沾一点。\n\nSuri：好，大家准备好了吗？"
   },
   {
     "id": "mc-expose",
@@ -1770,12 +1878,6 @@ function renderSetlist() {
     setlistButtons.set(step, { button, tag });
     item.append(button);
     list.append(item);
-    if (step.id === 'mc-love') {
-      const breakRow = document.createElement('li');
-      breakRow.className = 'interlude';
-      breakRow.textContent = '猜歌互动';
-      list.append(breakRow);
-    }
   }
 }
 
